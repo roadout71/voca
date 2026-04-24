@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#faf9f6">
+<title>MVP vol.1 · 60일 어휘 학습</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --bg: #faf9f6;
+    --surface: #ffffff;
+    --surface-alt: #f3f1ea;
+    --border: rgba(0,0,0,0.08);
+    --border-strong: rgba(0,0,0,0.18);
+    --text: #1a1a1a;
+    --text-secondary: #555;
+    --text-tertiary: #888;
+    --accent: #2563eb;
+    --accent-bg: #eff4ff;
+    --success: #0f6e56;
+    --success-bg: #e1f5ee;
+    --danger: #991b1b;
+    --danger-bg: #fcebeb;
+    --amber: #854f0b;
+    --amber-bg: #faeeda;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #18181a;
+      --surface: #232325;
+      --surface-alt: #2a2a2d;
+      --border: rgba(255,255,255,0.08);
+      --border-strong: rgba(255,255,255,0.18);
+      --text: #eaeaea;
+      --text-secondary: #b0b0b0;
+      --text-tertiary: #888;
+      --accent: #6ea3ff;
+      --accent-bg: #1a2740;
+      --success: #5dcaa5;
+      --success-bg: #0f2a22;
+      --danger: #f09595;
+      --danger-bg: #3a1a1a;
+      --amber: #fac775;
+      --amber-bg: #3a2a12;
+    }
+  }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 20px 14px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+  .container { max-width: 920px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 18px; }
+  .header h1 { font-size: 20px; font-weight: 500; margin-bottom: 4px; }
+  .header .sub { font-size: 12px; color: var(--text-secondary); }
+  .nav-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 10px;
+    margin-bottom: 14px;
+  }
+  .mode-tabs { display: flex; gap: 4px; margin-bottom: 10px; flex-wrap: wrap; }
+  .mode-tab {
+    flex: 1;
+    min-width: 70px;
+    padding: 10px 6px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-family: inherit;
+    -webkit-appearance: none;
+  }
+  .mode-tab:active { background: var(--surface-alt); }
+  .mode-tab.active {
+    background: var(--accent-bg);
+    color: var(--accent);
+    border-color: var(--accent);
+    font-weight: 500;
+  }
+  .mode-tab.review-tab.active {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border-color: var(--danger);
+  }
+  .day-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 3px;
+  }
+  .day-btn {
+    padding: 8px 0 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: transparent;
+    cursor: pointer;
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-family: inherit;
+    position: relative;
+    -webkit-appearance: none;
+    min-height: 36px;
+  }
+  .day-btn:active { background: var(--surface-alt); }
+  .day-btn.active {
+    background: var(--accent-bg);
+    color: var(--accent);
+    border-color: var(--accent);
+    font-weight: 500;
+  }
+  .day-btn .pct {
+    position: absolute;
+    bottom: 1px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: var(--success);
+  }
+  .day-btn .unk-dot {
+    position: absolute;
+    top: 2px;
+    right: 3px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--danger);
+  }
+  .day-btn.complete {
+    border-color: var(--success);
+    color: var(--success);
+  }
+  .scope-selector { display: flex; gap: 4px; margin-bottom: 10px; }
+  .scope-btn {
+    flex: 1;
+    padding: 8px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-family: inherit;
+  }
+  .scope-btn.active {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border-color: var(--danger);
+    font-weight: 500;
+  }
+  .options-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .options-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .options-row input[type="checkbox"] { cursor: pointer; width: 16px; height: 16px; }
+  .main {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    min-height: 340px;
+  }
+  .word-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    margin-bottom: 5px;
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .word-card:active { background: var(--surface-alt); }
+  .word-card.known {
+    background: var(--success-bg);
+    border-color: var(--success);
+  }
+  .word-card.unknown {
+    border-left: 3px solid var(--danger);
+  }
+  .word-num { font-size: 11px; color: var(--text-tertiary); min-width: 28px; }
+  .word-day-tag {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    padding: 1px 5px;
+    background: var(--surface-alt);
+    border-radius: 10px;
+    margin-left: 4px;
+    white-space: nowrap;
+  }
+  .word-main { flex: 1; min-width: 0; }
+  .word-header { display: flex; gap: 8px; align-items: baseline; margin-bottom: 2px; flex-wrap: wrap; }
+  .word-text { font-size: 16px; font-weight: 500; word-break: break-word; }
+  .word-pos {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    padding: 1px 6px;
+    background: var(--surface-alt);
+    border-radius: var(--radius);
+    font-style: italic;
+    white-space: nowrap;
+  }
+  .word-meaning { font-size: 14px; color: var(--text-secondary); line-height: 1.45; }
+  .check-mark { font-size: 14px; color: var(--success); min-width: 16px; }
+  .check-mark.unk { color: var(--danger); }
+  .flashcard {
+    min-height: 280px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 32px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.15s;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .flashcard:active { border-color: var(--border-strong); }
+  .flashcard-word { font-size: 40px; font-weight: 500; margin-bottom: 6px; word-break: break-word; line-height: 1.15; }
+  .flashcard-pos { font-size: 14px; color: var(--text-tertiary); font-style: italic; margin-bottom: 12px; }
+  .flashcard-meaning { font-size: 20px; color: var(--text); font-weight: 500; max-width: 640px; line-height: 1.45; margin-bottom: 12px; }
+  .flashcard-hint { font-size: 12px; color: var(--text-tertiary); margin-top: 18px; }
+  .flashcard-daylabel { font-size: 11px; color: var(--text-tertiary); margin-bottom: 8px; }
+  .fc-nav {
+    display: flex;
+    gap: 6px;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .fc-nav-side { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn {
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text);
+    font-family: inherit;
+    -webkit-appearance: none;
+    min-height: 40px;
+    touch-action: manipulation;
+  }
+  .btn:active { background: var(--surface-alt); }
+  .btn.success { color: var(--success); border-color: var(--success); }
+  .btn.success:active { background: var(--success-bg); }
+  .btn.danger { color: var(--danger); border-color: var(--danger); }
+  .btn.danger:active { background: var(--danger-bg); }
+  .fc-counter { font-size: 13px; color: var(--text-secondary); white-space: nowrap; padding: 0 6px; }
+  .quiz-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+  }
+  .quiz-question { font-size: 36px; font-weight: 500; text-align: center; margin: 20px 0 6px; word-break: break-word; line-height: 1.15; }
+  .quiz-pos { font-size: 13px; color: var(--text-tertiary); font-style: italic; text-align: center; margin-bottom: 18px; }
+  .quiz-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  @media (max-width: 600px) {
+    body { padding: 14px 10px; }
+    .quiz-options { grid-template-columns: 1fr; }
+    .quiz-question { font-size: 28px; }
+    .flashcard-word { font-size: 32px; }
+    .flashcard-meaning { font-size: 18px; }
+    .day-grid { grid-template-columns: repeat(6, 1fr); }
+    .header h1 { font-size: 18px; }
+    .main { padding: 14px; }
+    .flashcard { padding: 28px 16px; min-height: 250px; }
+  }
+  .quiz-option {
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    cursor: pointer;
+    font-size: 14px;
+    text-align: left;
+    color: var(--text);
+    font-family: inherit;
+    line-height: 1.4;
+    transition: background 0.1s;
+    -webkit-appearance: none;
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+  .quiz-option:active:not(.disabled) { background: var(--surface-alt); }
+  .quiz-option.correct {
+    background: var(--success-bg);
+    color: var(--success);
+    border-color: var(--success);
+    font-weight: 500;
+  }
+  .quiz-option.wrong {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border-color: var(--danger);
+  }
+  .quiz-option.disabled { cursor: default; pointer-events: none; }
+  .quiz-result { text-align: center; padding: 28px 12px; }
+  .quiz-score { font-size: 52px; font-weight: 500; line-height: 1; }
+  .quiz-score-label { font-size: 14px; color: var(--text-secondary); margin-top: 8px; }
+  .quiz-bar {
+    margin: 20px auto;
+    width: 280px;
+    max-width: 100%;
+    height: 8px;
+    background: var(--surface-alt);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .quiz-fill { height: 100%; background: var(--success); transition: width 0.6s ease; }
+  .progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: var(--surface-alt);
+    border-radius: var(--radius);
+    font-size: 13px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .progress-value { font-weight: 500; color: var(--text); }
+  .progress-label { color: var(--text-secondary); }
+  .progress-unk {
+    color: var(--danger);
+    font-weight: 500;
+  }
+  .reset-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-tertiary);
+    font-size: 12px;
+    text-decoration: underline;
+    font-family: inherit;
+    padding: 4px 6px;
+  }
+  .reset-btn:active { color: var(--danger); }
+  .footer-note {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 14px;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+  }
+  .empty-state .icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+  .empty-state p { margin: 6px 0; font-size: 14px; }
+  .empty-state .hint { font-size: 12px; color: var(--text-tertiary); margin-top: 8px; }
+  .review-summary {
+    background: var(--danger-bg);
+    border: 1px solid var(--danger);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: var(--danger);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .review-summary-count { font-weight: 500; }
+  .clear-unk-btn {
+    background: transparent;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    padding: 4px 10px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>MVP vol.1 어휘 학습</h1>
+    <div class="sub">60일 과정 · 3,000단어 (하루 50단어)</div>
+  </div>
+  <div class="nav-bar">
+    <div class="mode-tabs" id="modeTabs"></div>
+    <div id="daySection"></div>
+  </div>
+  <div class="main" id="mainContent"></div>
+  <div class="progress-info" id="progressInfo"></div>
+  <div class="footer-note">진도와 '모름' 단어는 브라우저에 자동 저장됩니다</div>
+</div>
+<script>
+const VOCAB = {"1":[["abhor","타동사","몹시 싫어하다, 혐오하다"],["illicit","형용사","불법의, 부정한; 불의의"],["plausible","형용사","타당한 것 같은, 이치에 맞는, 그럴듯한"],["differ","동사","① 다르다 ② 의견이 다르다, 동의하지 않다"],["request","","\"명사]. 요청; 청원서, 요청장, 요청서 / 동사].~하도록 부탁하다, 요청하다\""],["shallow","형용사","① 얕은 ② 천박한, 피상적인"],["pact","명사","계약, 협정, 조약"],["adequate","형용사","적당한, 충분한"],["zeal","명사","열의, 열중, 열심"],["tacit","형용사","무언의, 암묵적인"],["settle","동사","① 해결하다 ② (~에) 정착하다③ 지불[계산]하다"],["macabre","형용사","무시무시한, 소름끼치는"],["hail","동사","① 환호하여 맞이하다② ~을 큰 소리로 부르다"],["ominous","형용사","① 불길한, 나쁜 징조의 ② 전조(前兆)의 ③ (날씨가) 험악한"],["churlish","형용사","① 막된, 무례한② 인색한, 비열한"],["react","동사","① 반작용하다; (상호) 작용하다② 반응하다"],["similarity","명사","비슷함, 닮음, 유사; 유사성, 유사점, 닮은 점"],["imminent","형용사","(나쁜 일이) 금방이라도 닥칠 듯한, 절박한, 임박한"],["memoir","명사","① 전기; (고인의) 언행록; (pl.) 회고록 ② 연구 보고, 논문"],["wander","동사","① 돌아다니다, 헤매다, 방랑하다 ② 빗나가다, 길을 잃다"],["pecuniary","형용사","① 금전적인, 재정상의 ② 벌금을 물려야 할"],["sacred","형용사","신성한; 종교적인"],["guile","명사","교활; 간사한 꾀, 술책, 기만"],["famous","형용사","① 유명한, 고명한, 이름난② 멋진, 훌륭한, 뛰어난"],["calamity","명사","재앙, 재난; 불행"],["insist","동사","①고집하다[주장하다, 우기다]② 주장하다"],["dogmatic","형용사","① 독단적인, 고압적인② 교리의, 교의의"],["polemic","명사","논쟁, 격론; 논객(論客) 형용사].논쟁의, 논쟁을 좋아하는"],["exceed","동사","① 넘다, 초과하다② 우월하다, 능가하다, 뛰어나다"],["amenable","형용사","기꺼이 따르는, 순종하는, 잘 받아들이는"],["nihilism","명사","① 허무주의, 니힐리즘 ② 무정부주의"],["homely","형용사","① 매력 없는, 못생긴 ② (여자가) 가정적인③ 아늑한, 편안한"],["commit","타동사","① 저지르다, 범하다 ② 위임하다 ③ 약속하다④ 전념[헌신]하다"],["bogus","형용사","가짜의, 위조의"],["transcribe","타동사","① 베끼다, 복사하다② 옮겨 쓰다, 번역하다"],["lawsuit","명사","소송, 고소"],["endear","타동사","애정을 느끼게 하다; <재귀용법> (~에게) 사랑받다[to]"],["deadlock","명사","교착 상태, 막다름"],["secede","자동사","정식으로 탈퇴[분리]하다[from]"],["elaborate","형용사","정교한, 공들인 동사].① 상술하다, 자세히 설명하다 ② 정교하게 만들어내다"],["vanity","명사","① 자만심, 허영심② 헛됨, 무의미"],["minimize","동사","① 최소화하다; 축소하다 ② 과소평가하다, 얕보다"],["crestfallen","형용사","의기소침한, 풀이 죽은"],["fabricate","타동사","① 날조[조작]하다, 위조하다 ② 제작[조립]하다"],["attitude","명사","① 태도; 마음가짐 ② (신체의) 자세, 몸가짐 ③ 사고방식, 의견, 견해"],["participate","동사","① 참가하다, 참여하다② 어느 정도 가지다, ~의 기미가 있다[of]"],["brutal","형용사","잔인한; 폭력적인, 난폭한"],["eclat","명사","대성공; 갈채, 명성"],["admire","동사","① ~을 높이 평가하다, 칭찬하다; 존경하다 ② 감탄하며 바라보다"],["dialect","명사","① 방언, 지방 사투리② 통용어, 말씨"]],"2":[["yell","동사","고함치다, 소리 지르다 명사].외침[고함] 소리"],["laconic","형용사","(어구 등이) 간결한, 간명한; 말수가 적은"],["narrow","형용사","① 폭이 좁은; 좁아서 답답한② 마음이 좁은, 편협한"],["gracious","형용사","① 호의적인, 정중한② 자비로운; 인자한"],["pale","형용사","① 창백한, 핼쑥한② 엷은; (빛이) 희미한"],["telling","형용사","① 효과적인, 강력한 ② 효과적으로 보여주는"],["machination","명사","(보통 pl.) 음모, 모략"],["dainty","형용사","① 고상한, 우아한 ②맛있는, 풍미가 있는"],["scold","동사","(어린애 등을) 꾸짖다, ~에게 잔소리하다"],["boredom","명사","지루함, 따분함; 지루하게[따분하게] 하는 것"],["earnest","형용사","① 성실한, 진지한, 열심인 ② 중대한"],["theology","명사","(기독교) 신학"],["vacillate","자동사","흔들리다, 동요하다, 망설이다, 머뭇거리다"],["piety","명사","경건함, 독실함"],["climactic","형용사","정점의, 절정의"],["savior","명사","구조자; 구세주"],["rebellious","형용사","반항적인, 완고한; 반역적인"],["hallucination","명사","환각, 환영, 망상"],["aggravate","타동사","① 악화시키다 ② 괴롭히다, 화나게 하다"],["unctuous","형용사","① 기름 같은, 기름기 있는 ② 겉으로만 감동한"],["intuition","명사","직관(력), 직감"],["sagacious","형용사","총명한, 현명한"],["denounce","타동사","① 공공연히 비난하다② 고발[고소]하다"],["simultaneous","형용사","동시의, 동시에 일어나는, 동시에 존재하는"],["adjustment","명사","① (약간의) 수정, 조정② 적응"],["measure","동사","① 측정하다, 재다② 판단하다, 평가하다 명사].조치"],["rhyme","명사","① 운, 압운(押韻), 각운(脚韻) ② (pl.) 운문, 시"],["shorten","동사","① 짧게 하다, 줄이다; 짧아지다 ② 생략하다"],["iconoclastic","형용사","우상 파괴적인; 인습 타파의"],["probation","명사","① 검정(檢定), 시험, 심사 ② 수습 (기간) ③ 보호 관찰"],["bewitch","타동사","매혹하다, 황홀케 하다; 마법을 걸다"],["competition","명사","① 경쟁② (경연) 대회, 시합 ③ 경쟁자, 경쟁 상대"],["dignity","명사","존엄, 위엄; 품위; (태도·말 등의) 무게, 장중함"],["miscellaneous","형용사","여러 가지 종류의, 이것저것 잡다한"],["accidental","형용사","① 우연한, 돌발적인, 뜻밖의 ② 비본질적인, 부수적인"],["peruse","타동사","① 숙독하다, 정독하다② 살피다[읽다]"],["cache","명사","은닉처, 숨겨두는 장소 동사]. 저장하다, 숨기다"],["abase","타동사","① (지위·품격 등을) 떨어뜨리다 ② 창피를 주다"],["efface","타동사","지우다, 삭제하다, 말살하다"],["float","동사","뜨다[띄우다]; 떠다니다, 표류하다"],["ponderous","형용사","① 크고 무거운, 육중한② 지루한, 장황한"],["aspiration","명사","열망, 포부"],["certify","동사","증명[보증]하다; 공인하다"],["hygienic","형용사","위생적인; 보건상의; 위생학의"],["spank","타동사","찰싹 때리다 명사].손바닥으로 때리기"],["facade","명사","① 정면, 앞면② 표면, 겉모양; 겉치레"],["inquire","동사","묻다, 문의하다; 조사하다[i명사]to]"],["dolorous","형용사","슬픈, 비통한"],["offense","명사","① 위반, 위법 행위, 범죄 ② 화를 냄③ 공격"],["embryo","명사","① 태아 ② 배(胚), 눈; 싹 ③ (발달의) 초기"]],"3":[["cogent","형용사","설득력 있는"],["earmark","타동사","배당[할당, 책정]하다 명사].기호; 특징"],["pacific","형용사","평화로운, 평온한; 잔잔한 명사].(the P~) 태평양"],["sack","타동사","① 해고하다 ② 약탈하다 명사].① 부대, 마대, 자루"],["tactile","형용사","촉각의; 감촉할[만져서 알] 수 있는"],["jealous","형용사","① 질투하는, 시기하는 ② 지키려고 애쓰는"],["abandon","타동사","① 버리다② 단념하다, 그만두다"],["factotum","명사","잡역부, 막일꾼"],["mediate","동사","조정[중재]하다, 화해시키다"],["wayward","형용사","① 제멋대로인; 고집 센 ② 변덕스러운"],["thrift","명사","검소, 절약"],["diffuse","동사","① 흩뜨리다, 발산하다, 퍼뜨리다 ② 퍼뜨리다"],["effeminate","형용사","여성적인, 사내답지 못한, 나약한, 유약한"],["vane","명사","(풍차·터빈·추진기 등의) 날개; 풍향계, 바람개비"],["peep","동사","① 엿보다② (성질 등이) 모르는 사이에 나타나다"],["negotiation","명사","협상, 교섭, 절충"],["scandalous","형용사","소문이 나쁜, 수치스러운; 중상적인"],["hype","명사","① 과대광고[선전]; 속임타동사]① 과대선전하다"],["perspective","명사","① 견해, 관점, 시각 ② 원근법, 투시화법"],["realize","동사","① 깨닫다, 알아차리다 ② 실현[달성]하다"],["acerbic","형용사","① (맛이) 신, 떫은② 거친, 표독한, 신랄한"],["cease","동사","그만두다, 그치다, 중지하다 명사].중지, 정지"],["sect","명사","분파, 종파; 교파; 당파; (철학 등의) 학파"],["itinerary","명사","여정, 여행 계획[일정표] 형용사].여행의; 순회하는"],["predicate","동사","① 단언하다; 진술하다, 서술하다 ② 기초를 두다"],["shabby","형용사","초라한, 허름한; 낡아빠진, 누더기의"],["ennui","명사","권태, 지루함"],["boorish","형용사","(사람이나 행동이) 촌스러운, 상스러운, 천박한"],["adversary","명사","적(敵), 적수, 상대"],["damp","형용사","축축한, 습기 있는"],["complain","동사","① 불평하다, 불만을 제기하다 ② 호소하다[of]"],["sinecure","명사","(명예 또는 수입이 있는) 한직, 명예직"],["imperative","명사","명령; 의무, 필요 형용사].피할 수 없는, 긴급한"],["magnanimous","형용사","도량이 넓은, 관대한, 아량 있는"],["legerdemain","명사","① 요술, 마술; 날랜 손재주 ② 속임수"],["solidify","동사","① 공고히 하다, 강화하다 ② 고체화하다"],["ambivalent","형용사","반대 감정이 병존하는, ; 불확실한"],["flagrant","형용사","① 명백한, 노골적인 ② 악명 높은, 극악(무도)한"],["architect","명사","① 건축가, 건축 기사 ② 설계자 동사].설계하다"],["detail","명사","① 세부사항 동사].① 자세히 말하다"],["poignant","형용사","마음 아픈, 통렬한; 신랄한; 통쾌한"],["decadence","명사","① 타락, 퇴폐; 쇠퇴"],["belie","타동사","① 거짓 전하다, 속이다 ② 거짓임을 나타내다"],["respite","명사","① 일시적인 중단, 한숨 돌리기 ② 유예[연기]"],["hefty","형용사","① 장대한, 크고 무거운 ② 많은, 두둑한"],["minority","명사","① 소수; 소수파; 소수 민족[집단] ② 미성년"],["cabal","명사","① 음모, 권모술수 ② 비밀결사; 도당, 파벌"],["inflict","타동사","주다, 입히다, 가하다, 과하다"],["doctrine","명사","① 교의, 교리 ② 주의; 신조, 학설"],["outdistance","타동사","(경주·경마 등에서) 훨씬 앞서다, 능가하다"]],"4":[["facilitate","타동사","(행위 따위를) 용이하게 하다; 촉진하다"],["salubrious","형용사","(기후·장소·음식물 등이) 몸에 좋은, 건강에 좋은"],["quack","명사","돌팔이[가짜] 의사; 사기꾼"],["hackneyed","형용사","진부한, 흔해빠진"],["thorough","형용사","① 완전한, 전적인, 진짜의② 빈틈없는, 철저한"],["pant","동사","① 헐떡거리다, 숨차다② 갈망[열망]하다"],["veracious","형용사","정직한, 진실을 말하는; 진실한, 정말인"],["bilateral","형용사","쌍방의, 쌍무적인"],["emaciated","형용사","야윈, 수척한"],["mushroom","명사","버섯 형용사]. 급성장하는자동사]빨리 성장[발전]하다"],["penchant","명사","경향, 애호, 취미[for]"],["scowl","동사","① 얼굴을 찌푸리다; 노려보다② 험악해지다"],["ignoble","형용사","(성품이) 비열한, 야비한; 비천한"],["undo","동사","① 원상태로 돌리다, 취소하다 ② 파멸로 이끌다"],["mellow","형용사","① 익은, 감미로운② 부드럽고 아름다운 ③ 원숙한"],["sediment","명사","앙금, 침전물; 퇴적물"],["consecutive","형용사","연속적인, 계속되는"],["pitfall","명사","① 함정 ② 생각지 않은 위험, 함정, 곤란"],["obdurate","형용사","고집 센, 완고한"],["elevate","타동사","① 올리다 ② 승진시키다 ③ 향상시키다"],["accountable","형용사","① 책임이 있는 ② 설명할 수 있는"],["shorthand","명사","① 속기 ② 약칭; 편법"],["dabble","타동사","첨벙거리다[튀기다] 자동사] 조금 해보다"],["plebeian","형용사","① 대중의, 서민의② 보통의; 비속한명사].서민"],["nascent","형용사","생기려고[발생하려고] 하는, 초기의"],["camouflage","명사","위장, 변장; 기만 동사].위장[변장]하다; 감추다"],["illuminate","동사","① 조명하다, 밝게 하다② 설명[해명]하다"],["abnegate","타동사","① 버리다, 포기하다 ② (쾌락 등을) 끊다"],["foliage","명사","[집합적] 잎; 잎의 무성함"],["corpulent","형용사","뚱뚱한, 살찐, 비만한"],["slacken","동사","① 늦추다, 완화되다 ② 약간 풀다, 느슨해지다"],["adolescence","명사","청소년기, 사춘기, 청춘기"],["destruction","명사","① 파괴; 파기; 멸망, 파멸 ② 파멸의 원인"],["agitate","동사","선동하다, 동요시키다, 흔들다; 휘젓다"],["entity","명사","① 실재(물), 존재(물) ② 본질; 실체"],["generate","타동사","① 낳다② 발생시키다 ③ 야기하다"],["homonym","명사","동음이의어; 이름이 같은 물건, 동명이인"],["procure","동사","① 획득하다, 조달하다 ② 주선하다"],["discernible","형용사","인식[식별]할 수 있는, 보고 알 수 있는"],["impose","동사","① 지우다, 부과하다 ② 강요하다"],["spontaneous","형용사","① 자발적인, 임의의 ② 저절로 일어나는"],["anthropomorphic","형용사","의인화[인격환]된, 사람의 모습을 닮은"],["celebrate","동사","① 기념하다, 축하하다② 찬양하다, 기리다"],["ramshackle","형용사","금방이라도 무너질 듯한, 흔들거리는"],["dominion","명사","① 지배력; 주권; 통제② (종종 pl.) 영토, 영지"],["tamper","자동사","① 참견하다② 손대다③ 뇌물을 주다, 매수하다"],["lackadaisical","형용사","① 활기 없는, 열의 없는② 게으른, 부주의한"],["backbite","동사","(뒤에서) 험담하다, 중상하다"],["magnitude","명사","① 크기, 양 ② 중대(성), 중요함; 위대함, 고결"],["refuse","동사","거절하다, 거부하다 명사].폐물, 쓰레기; 나머지"]],"5":[["definite","형용사","① 뚜렷한, 확실한; 명확한 ② 한정된, 일정한"],["timid","형용사","겁이 많은, 소심한"],["malefactor","명사","악인, 죄인, 범인"],["sapid","형용사","① 맛좋은, 풍미 있는 ②흥미[매력] 있는"],["vacuum","명사","① 진공 (공간); 진공 상태 ② 공허, 공백"],["abbreviate","동사","(어구를) 줄여 쓰다, 생략하다, 단축하다"],["capacious","형용사","넓은, 널찍한, 큼직한"],["racism","명사","인종 차별; 민족[인종] 차별주의[정책]"],["parch","동사","① 바싹 마르게 하다; 태우다② 볶다, 굽다"],["nemesis","명사","① 응당 받아야 할 벌, 천벌, 인과응보"],["scoff","동사","비웃다, 조롱하다[형용사]t] 명사].비웃음, 냉소, 조롱; 조롱거리"],["impassive","형용사","① 무표정한, 냉정한 ② 의식이 없는"],["analyze","동사","① 분석하다② <물리·화학> 분해하다"],["semblance","명사","① 외관, 외형; 겉보기; 모양, 꾸밈 ② 유사, 닮음"],["fastidious","형용사","세심한, 꼼꼼한, 까다로운"],["weary","형용사","① (몹시) 지친, 피곤한 ② 싫증나는, 따분한"],["recuperate","동사","(건강·원기·손실 등을) 회복하다, 되찾다"],["perennial","명사","다년생 식물 형용사].① 지속되는, 영원한"],["shrewd","형용사","① 예민한, 날카로운, 영리한 ② 빈틈없는, 재빠른"],["bounty","명사","① 관대함, 너그러움 ② 보상금, 상금; 장려[보조]금"],["utter","동사","입 밖에 내다, 발언하다; 말하다 형용사].① 전적인, 완전한 ② 무조건의"],["siesta","명사","(점심 후의) 낮잠"],["mendacious","형용사","거짓의; 거짓말하는, 부정직한"],["karma","명사","① 인과응보, 업보, 숙명; 인연 ② 특징적인 분위기"],["given","","prep. ~을 고려해 볼 때, ~을 감안하면 형용사].① 정해진, 특정한"],["fumble","동사","① 더듬다, ② 분명치 않게 이야기하다, 말을 더듬다"],["improvement","명사","① 개량, 진보, 증진; 개선점② 이용, 활용"],["egalitarian","명사","형용사].평등주의자(의)"],["sovereign","형용사","주권이 있는, 독립한, 자주적인 명사].주권자"],["pilgrim","명사","① 순례자, 성지 참배자 ② 나그네, 방랑자"],["chew","동사","① 씹다; 물어뜯다, 깨물다② (심사) 숙고하다"],["dastard","명사","비겁한 사람, 겁쟁이"],["plummet","자동사","곤두박질치다, 급락하다, 수직으로 떨어지다"],["ingenuous","형용사","순진한, 천진난만한; 솔직한, 정직한, 꾸밈없는"],["mourn","동사","(사람의 죽음을) 애도[슬퍼]하다"],["porous","형용사","작은 구멍이 많은; 스며드는, 투과성의"],["tendency","명사","성향, 경향; 추세, 동향"],["adjacent","형용사","이웃의, 인접한, 부근의[to]"],["obligatory","형용사","의무적인, 강제적인; 필수의"],["languish","자동사","① 쇠약해지다; (식물이) 시들다 ② 활기를 잃다"],["gadget","명사","(기계의) 간단한 장치, 도구"],["cripple","타동사","불구가 되게 하다; 손상하다 명사].불구자"],["euphony","명사","듣기 좋은 음조[소리], 듣기 좋은 어조"],["diligent","형용사","근면한, 부지런한"],["befall","동사","(좋지 않은 일이) 일어나다, 생기다"],["habitual","형용사","① 습관적인; 버릇이 된 ② 평소의"],["coincidence","명사","우연의 일치, 부합; 동시발생(한 사건)"],["tear","명사","(보통 pl.) 눈물; 비애, 비탄 자동사]① 찢다, 째다"],["doom","명사","① 운명, 숙명② 파멸, 멸망, 죽음"],["hideous","형용사","무시무시한, 소름끼치는, 끔찍한"]],"6":[["vacant","형용사","① 빈, 비어 있는 ② (마음·머리·표정이) 멍한"],["acme","명사","절정, 정점, 극치, 전성기"],["indicate","동사","① 나타내다②내비치다, 시사하다 ③ 가리키다"],["palatable","형용사","① 입에 맞는, 맛있는 ② 기분 좋은, 마음에 드는"],["jam","동사","① 쑤셔 넣다, 채워 넣다②몰려들다명사].① 꽉 들어참"],["radical","형용사","급진적인, 과격한 명사].급진당원, 과격론자"],["ban","동사","금(지)하다명사].① 금지; 금지령 ② 반대, 비난"],["eccentric","형용사","① 별난, 괴짜인, 기이한 ② 중심을 달리하는"],["salvation","명사","구제, 구조, 구원"],["reprieve","타동사","① 형 집행을 유예[취소]하다 ② 구제[경감]하다"],["prevalent","형용사","(습관·병 등이) 널리 퍼진, 만연한, 유행하는"],["monograph","명사","(특정 테마에 관한) 전공[연구] 논문"],["sensual","형용사","관능적인; 호색(好色)의; 육감적인"],["debacle","명사","① 붕괴, 와해; 대실패; 폭락, 도산 ② 산사태"],["organization","명사","① 기구, 체제; 조직체, 단체② 조직화, 구성"],["undulate","동사","물결치다, 흔들리다 형용사]. 물결 모양의"],["adept","형용사","능숙한, 숙달된, 정통한 명사].숙련자, 명인, 달인"],["equality","명사","① 같음, 동등; 평등, 균등 ② 등식(等式)"],["disapprove","동사","① 인가하지 않다 ② 찬성하지 않다"],["maintain","타동사","① 유지[보유, 지속]하다 ② 주장하다, 단언하다"],["cadence","명사","① 리듬, 운율, 가락② (목소리의) 억양"],["factitious","형용사","인위적인, 인공적인; 부자연스러운; 가짜의"],["pique","명사","화, 불쾌, 기분이 언짢음 동사].① 분개하게 하다"],["hierarchy","명사","① 계층제, 계급제 ② 지배층, 권력층"],["shortchange","타동사","① 거스름돈을 덜 주다 ② 부당한 대우를 하다"],["discordant","형용사","① 조화하지 않는② 불협화음의, 귀에 거슬리는"],["prospect","명사","① (종종 pl.) 가망, 전망; 기대② 전망, 경치"],["champion","타동사","옹호하다, 지지하다"],["altar","명사","제단; 분향소"],["slender","형용사","① 호리호리한, 가냘픈 ② 얼마 안 되는, 빈약한"],["engage","동사","① 약속하다②약혼시키다③고용하다④종사시키다"],["illustrious","형용사","① 저명한, 유명한,이름난②빛나는, 화려한"],["label","명사","① 라벨, 딱지, 쪽지, 꼬리표② 상표, 브랜드③ 호칭"],["beforehand","형용사","d.미리, 사전에, 전부터"],["odious","형용사","싫은, 불쾌한, 혐오스러운"],["necessity","명사","① 필요, 필요성 ② 필수품"],["tarnish","동사","① 흐리게 하다, 변색시키다② 더럽히다"],["clairvoyant","형용사","투시의 ; 통찰력이 있는 명사]. 통찰력이 있는 사람"],["irrigate","동사","(토지에) 물을 대다, 관개(灌漑)하다"],["mercenary","형용사","돈을 목적으로 일하는, 돈을 위한 명사].용병"],["torpor","명사","마비 상태, 무감각; 무기력; 휴면[휴지]상태"],["lure","명사","① 매력, 매혹 ② 미끼 타동사]유혹하다, 꾀어내다"],["abate","동사","① 줄다, 약해지다② 줄이다; 누그러뜨리다"],["gaffe","명사","(사교·외교상의) 과실, 실수, 결례"],["sweep","동사","① 청소하다 ② 급속히 퍼지다, 휩쓸다"],["haggard","형용사","야윈, 수척한, 초췌한"],["dowry","명사","① (신부의) 지참금 ② 천부(天賦)의 재능"],["allege","타동사","주장하다, 단언하다, 혐의를 제기하다"],["foible","명사","(성격의) 사소한 약점, 결점, 흠"],["commandeer","타동사","징집[징용]하다; (물자를) 징발하다"]],"7":[["generous","형용사","① 관대한, 아량 있는② 푸짐한, 풍부한"],["rampant","형용사","① 과격한, 사나운② 무성한, 우거진③만연하는"],["accentuate","타동사","강조[역설]하다, 두드러지게 하다"],["elegy","명사","비가(悲歌), 애가"],["magnificent","형용사","① 웅장한, 장엄한② 최상(급)의, 최고의, 훌륭한"],["henceforth","형용사","d. 이제부터는, 이후에는"],["taboo","명사","금기, 터부; (사회적·종교적인) 금지, 금제"],["saline","형용사","소금의; 염분이 있는; 짠"],["palliative","형용사","일시적으로 가볍게 하는, 완화하는 명사].① 완화제"],["cajole","타동사","감언으로 꾀다[속이다]"],["edible","형용사","식용에 적합한, 먹을 수 있는 명사].(보통 pl.) 식품"],["scrutinize","동사","세심히 살피다, 면밀히 조사[검토]하다"],["anecdote","명사","일화, 기담; 비화"],["sloppy","형용사","① 엉성한, 조잡한 ② 질척질척한; 흠뻑 젖은"],["witness","명사","목격자 동사]. 목격하다; 입증하다; ~의 증거가 되다"],["identity","명사","① 일치, 동일성 ② 독자성, 개성 ③ 정체, 신원"],["bigoted","형용사","편협한, 옹졸한, 고집불통의"],["sentient","형용사","지각[감각]이 있는"],["renovate","타동사","① 새롭게 하다, 혁신하다② 원기를 회복시키다"],["memento","명사","기념물, 기념으로 남긴 물건, 추억거리; 기억"],["negligible","형용사","무시해도 좋은, 하찮은, 사소한"],["dazzle","동사","① 눈이 부시게 하다② 현혹시키다, 압도하다"],["quadruple","형용사","네 배의; 네 겹의 동사].네 배로 하다; 네 배가 되다"],["plead","동사","① 변호하다 ② 이유로서 내세우다③ 탄원하다"],["cronyism","명사","정실인사, 연줄, 연고; 족벌주의; 편애, 편파"],["implore","동사","애원하다, 간청하다, 탄원하다"],["feature","명사","① 특징, 특색② (종종 pl.)용모,얼굴"],["thorny","형용사","가시가 많은; (문제 등이) 곤란한, 골치 아픈"],["border","명사","① 국경[경계](지역) ② 가장자리동사].① 인접하다"],["specify","동사","이름을 일일이 열거하다, 구체적으로 명시하다"],["debris","명사","부스러기, 파편, 잔해"],["endue","타동사","① 부여하다 ② (옷을) 입다; (~에게) 입히다"],["lethargic","형용사","① 기면성의, 혼수(상태)의 ② 무기력한, 둔감한"],["obesity","명사","비만, 비대"],["incandescent","형용사","① 백열의; 눈부신, 빛나는 ② 열렬한, 의욕에 불타는"],["fundamental","형용사","① 근본적인, 기초의 ② 중요한, 필수적인"],["solecism","명사","(말·글에서의) 실수, 결례"],["abash","타동사","부끄럽게 하다; 당황하게 하다, 무안하게 하다"],["charity","명사","① 자애, 자비, 박애② 자선(행위) ③ 자선단체"],["discreet","형용사","① 분별 있는, 사려 깊은, 현명한 ② 신중한"],["vitiate","타동사","①~의 질을 손상하다② 오염시키다③무효화하다"],["utility","명사","① 쓸모가 있음② (pl.) 실용품, 유용물 ③ 공익사업"],["ascetic","형용사","고행의, 금욕적인 명사].금욕주의자; 고행자, 수도자"],["drawback","명사","결점, 약점"],["lodge","동사","① 숙박[투숙]하다, 묵다② ~에 꽂히다③ 숨기다"],["coherent","형용사","일관성있는, 논리정연한"],["placebo","명사","① 플라시보, 위약 ② 아첨, 알랑거림"],["mulct","타동사","벌금을 과하다 명사].벌금, 과료"],["bliss","명사","더 없는 행복, 환희; 희열"],["prompt","형용사","신속한; 즉석의 동사].① 자극하다,격려하다② 촉구하다"]],"8":[["harmful","형용사","해로운, 해가 되는"],["sanctuary","명사","① 거룩한 장소, 성역② 은신처, 피난처"],["ebullient","형용사","① 비등하는, 끓어 넘치는 ② 원기 왕성한"],["peccadillo","명사","가벼운 죄, 조그마한 과오; 작은 결점"],["abut","동사","인접하다, 접경하다"],["dilettante","명사","아마추어 평론[예술]가 형용사].아마추어의"],["ransack","타동사","① 샅샅이 뒤지다 ② 빼앗다, 약탈하다"],["palpable","형용사","① 뚜렷한, 명백한, 감지할 수 있는"],["callow","형용사","① 경험이 없는, 미숙한, 풋내기의"],["embrace","동사","① 받아들이다[수용하다] ② 껴안다, 포옹하다"],["nadir","명사","① <천문학> 천저(天底) ② 최하점, 최저점"],["martinet","명사","규율에 엄격한 사람, 몹시 까다로운 사람"],["pinpoint","타동사","① ~의 위치를 정확히 나타내다"],["bare","형용사","① 벌거벗은, 알몸의② 사실 그대로의, 적나라한"],["skim","동사","① 걷어내다 ② 스쳐 지나가다③ 대충 훑어 읽다"],["efficient","형용사","유능한; 효율적인"],["lack","명사","부족, 결핍; 부족한 것, 필요한 것 동사].~이 없다,"],["tentative","형용사","① 시험적인, 일시적인② 망설이는; 애매한"],["mitigate","동사","① 누그러뜨리다, 가라앉히다② 경감하다"],["sensible","형용사","현명한, 분별 있는, 사리를 아는"],["drizzle","명사","이슬비, 보슬비, 가랑비"],["impeccable","형용사","나무랄 데 없는, 결점 없는"],["equation","명사","① 같게 함, 균등화; 평형 ②<수학>방정식; 등식"],["debilitate","타동사","(사람을) 약하게 하다, 쇠약하게 하다"],["ambience","명사","분위기; 주위, 환경"],["coerce","타동사","강요하다, 강제하다"],["retinue","명사","[집합적] (특히 왕·귀족의) 수행원, 수행원단"],["undaunted","형용사","불굴(不屈)의, 기가 꺾이지 않는, 대담한"],["bleach","동사","희게 하다, 표백하다;바래게[희게] 하다명사].표백"],["quest","명사","① 탐색, 탐구, 추구 ② 탐색여행동사].탐색하다"],["infest","타동사","떼지어 몰려들다, 들끓다; 횡행하다; 만연하다"],["satisfaction","명사","① 만족, 충족② <법> (의무의) 이행③ 납득, 이해"],["appellation","명사","명칭, 호칭"],["officiate","동사","① 공무[직무]를 수행하다② (시합 등의) 심판을 보다"],["ingredient","명사","① (특히 요리 등의) 재료, 성분 ② 구성 요소"],["snowball","명사","① 눈뭉치, 눈덩이 동사].눈덩이식[가속적]으로 커지다"],["commodity","명사","① 상품, 물품; 생필품 ② , 원자재 ③ 유용한 것"],["abruptly","형용사","d.① 갑자기, 돌연히 ② 무뚝뚝하게, 퉁명스럽게"],["plethora","명사","과잉, 과다"],["specious","형용사","허울뿐인, 외양만 좋은, 진실 같은, 그럴듯한"],["fragrant","형용사","냄새가 좋은, 향기로운"],["genocide","명사","대량학살, 집단학살"],["vehement","형용사","격렬한, 맹렬한"],["ordeal","명사","호된 시련, 고된 체험"],["confidential","형용사","① 기밀의, 비밀의, 은밀한 ② 신임이 두터운"],["morale","명사","(군대 혹은 집단의) 사기, 의욕"],["topple","동사","① 넘어지다 ② 실각시키다, 전복시키다"],["hiatus","명사","(일·행동 등의) 중단, 휴게; 틈, 사이"],["laboratory","명사","실험실, 연구소"],["blur","동사","① 흐릿하게 만들다 ② 모호하게 만들다 명사].더러움"]],"9":[["bizarre","형용사","기이한, 기괴한, 특이한"],["trailblazer","명사","개척자, 선구자"],["messy","형용사","지저분한, 어질러진, 엉망인; 난잡한"],["calibrate","타동사","①~를 재다, 측정하다② 의 눈금을 정확히 조정하다"],["pandemonium","명사","대혼란, 아수라장"],["rancid","형용사","고약한 냄새가 나는, 썩은 냄새가 나는"],["sequester","동사","① 격리시키다 ② 압류하다, 몰수하다"],["opponent","명사","(경기·논쟁 등의) 적, 상대"],["expenditure","명사","① 지출, 지불; 소비, 소모 ② 경비, 비용"],["impart","동사","① 전달하다, 알리다[to] ② 주다[to]"],["furious","형용사","① 성난, 격노한; 광포한, 무서운 ② 격렬한"],["bode","동사","징조[전조]가 되다; (좋은․나쁜) 징조이다[for]"],["plastic","형용사","① 플라스틱으로 된 ② 형태를 만들기가 쉬운"],["motley","형용사","① 잡다한, 혼성의② 얼룩덜룩한 명사].① 잡동사니"],["taciturn","형용사","무언의, 말수가 적은"],["embellish","타동사","① 아름답게 꾸미다,장식하다 ②재미있게 꾸미다"],["sculpture","명사","조각, 조각술, ; 조각 작품 동사].조각하다"],["distraught","형용사","괴로운, 마음이 산란한; 미친"],["reside","자동사","① 살다, 거주하다; 주재하다② 존재하다"],["laity","명사","① 평신도, 일반 신자② 문외한, 아마추어"],["sluggish","형용사","① 게으른, 나태한; 둔한, 느린 ② 활기 없는"],["pensive","형용사","생각에 잠긴,수심에 잠긴; 구슬픈"],["activate","타동사","① 활동시키다② 활성화하다; 촉진하다"],["chivalry","명사","① 기사도② 정중한 태도, 친절"],["everlasting","형용사","① 영원[영구]한, 불후의 ② 끝없는, 끊임없는"],["sangfroid","명사","(위험·긴급한 때의) 침착, 냉정"],["undercover","형용사","비밀의, 비밀리에 하는, 위장근무의"],["physiognomy","명사","① 인상학, 관상학 ② 얼굴, 인상"],["demote","타동사","~의 지위를[계급을] 떨어뜨리다, 강등시키다"],["heave","동사","① (무거운 것을) (들어) 올리다 ② 융기시키다; 부풀리다"],["gaiety","명사","① 유쾌, 쾌활, 명랑② (주로 pl.) 환락, 법석"],["colloquial","형용사","구어[회화]체의, 일상회화의"],["withhold","동사","① 허락하지 않다 ② 억제하다 ③ 공제하다"],["allowance","명사","① 수당, 급여② (보통 pl.) 참작; 여유 ③ 한도"],["immense","형용사","① 광대한, 거대한, 막대한② 헤아릴 수 없는, 한없는"],["snap","동사","① 덥석 물다② 덤벼들다, 움켜쥐다 형용사].급히 하는"],["brim","명사","가장자리, 언저리; 물가 동사].넘칠 정도로 차다"],["dilatory","형용사","꾸물거리는, 더딘; 지연시키는, 시간을 끄는"],["cozy","형용사","아늑한, 포근한, 편안한, 안락한"],["investigation","명사","① 조사, 수사, 연구 ② 조서, 조사 보고"],["verbal","형용사","① 언어의, 말(言)의 ② 말로 된, 구두의"],["jargon","명사","(특정한 직업·집단의) 특수 용어, 전문어"],["arrogate","타동사","① 가로채다, 침해하다 ② 사칭하다"],["manufacture","동사","① 제조하다 ② 꾸며내다, 날조하다 명사]. 제조; 제조업"],["duel","명사","결투; 싸움, 투쟁 동사].(~과) 다투다, 결투하다"],["vengeful","형용사","앙심을 품은, 복수심에 불타는"],["fidelity","명사","① 충실; 엄수② 진짜 그대로임; 박진성"],["linger","동사","① 좀처럼 없어지지 않다② 근처를 서성거리다"],["austerity","명사","① 엄격함, 준엄함② 내핍, 내핍 생활; 긴축"],["spare","동사","① 모면하게 하다 ② 할애하다 ③ 아끼다"]],"10":[["temporary","형용사","① 일시적인, 잠깐 동안의, 순간의 ② 임시적인"],["abode","명사","① 거주; 주소, 거처② 체재, 체류"],["recalcitrant","형용사","저항[반항]하는, 고집 센; 다루기 힘든"],["counterfeit","형용사","모조의, 가짜의 명사].가짜, 위조품타동사] 위조하다"],["galvanize","타동사","갑자기 활기를 띠게 하다"],["onslaught","명사","돌격, 습격"],["impending","형용사","(불쾌한 일이) 임박한, 곧 일어날 듯한"],["delinquent","형용사","① 의무 불이행의, 직무태만의② 연체되어 있는"],["majesty","명사","① 위엄, 장엄 ② 권위, 통치권③ 왕; 왕족"],["adjourn","동사","(재판·회의 등을) 휴회[휴정]하다; 연기하다"],["emissary","명사","사자(使者); 밀사; 간첩"],["merciless","형용사","무자비한, 인정사정없는, 잔인한"],["utmost","형용사","① 최대한의, 더할 나위 없는, 극도의 ② 가장 먼"],["panacea","명사","만병통치약"],["channel","명사","① 해협; 수로② 경로동사].① 전달하다"],["raft","명사","① 뗏목 ② 많음, 다수, 다량[of]"],["eligible","형용사","적격의, 적임의; 피선거 자격이 있는; 바람직한"],["sacrilege","명사","신성한 것을 더럽힘; 신성 모독(죄)"],["facetious","형용사","우스운, 익살스러운"],["pediatrician","명사","소아과 의사"],["boost","타동사","① 밀어 올리다 ② 후원하다③ 인상하다"],["analogous","형용사","유사한, 비슷한, 닮은"],["scare","동사","① 놀라게[겁나게] 하다 ② 겁먹다, 무서워하다"],["excoriate","타동사","① 혹평하다, 심하게 비난하다 ② ~의 껍질을 벗기다"],["phenomenal","형용사","놀랄만한, 경이적인, 굉장한"],["neologism","명사","신조어"],["social","형용사","① 사회의, 사회적인② 사교적인 명사].사교 파티"],["translate","동사","① 번역하다 ② 해석하다, 설명하다"],["wirepuller","명사","막후의 인물, 배후 조종자"],["inspect","타동사","① (세밀히) 조사하다, 검사하다② 검열[사열]하다"],["slipshod","형용사","되는 대로의, 엉성한, 부주의한"],["heckle","타동사","당돌한 질문으로 애먹이다, 괴롭히다"],["vacuous","형용사","① 빈, 공허한 ② 멍청한, 얼빠진"],["mutiny","명사","폭동, 반란 자동사]폭동[반란]을 일으키다"],["debar","타동사","① 내쫓다, 제외하다[from]② 금하다, 방해하다"],["keen","형용사","① 날카로운, 예리한 ② 격렬한; 강렬한"],["shudder","자동사","떨다, 전율하다; 몸서리치다 명사]. 떪, 전율; 몸서리"],["carnage","명사","살육, 대학살"],["poise","동사","① 균형 잡히게 하다② 취하다, 유지하다"],["intermingle","동사","혼합하다, 섞다; 섞이다"],["annoyance","명사","① 짜증, 불쾌감, 분노; 성가심 ② 성가신 사람[일]"],["drowsy","형용사","졸음이 오는, 졸리게 하는; 졸리는"],["freeze","동사","① 얼다, 빙결[동결]하다② 간담을 서늘하게 하다"],["lecherous","형용사","호색적인, 음란한; 색욕을 자극하는"],["sprawl","동사","① 제멋대로 퍼져 나가다② 큰대자로 드러눕다"],["backbone","명사","① 등뼈, 척추"],["haphazard","형용사","우연한, 계획성 없는, 되는 대로의"],["complicit","형용사","(범죄 등에) 공모한, 공범의, 연루된"],["disquisition","명사","논문, 논고"],["applaud","동사","① 박수갈채하다 = accalim, cheer, clap ② 칭찬하다 = commend, compliment, extol, laud, praise"]],"11":[["aboriginal","형용사","토착의, 원주민의"],["recourse","명사","의지; 의지가 되는 사람[것]"],["ubiquitous","형용사","어디에나 있는, 편재하는"],["taint","동사","① 더럽히다, 오염시키다② 손상시키다"],["lassitude","명사","(정신적·육체적) 나른함, 권태, 피로"],["perpendicular","형용사","수직의, 직각을 이루는"],["serpentine","형용사","① 구불구불한 ② 음흉한, 교활한"],["enact","타동사","① 제정하다, 법제화하다②상연[연기]하다"],["middle-of-the-road","형용사","중도의, 온건한"],["outcast","명사","추방당한 사람, 부랑자형용사] 내쫓긴, 버림받은"],["barren","형용사","① 불모인;열매를 맺지 못하는② 불임의"],["pragmatism","명사","실용주의; 실제적인 사고방식"],["scarce","형용사","① 드문, 희귀한 ② 부족한, 적은, 결핍한"],["rubicund","형용사","(사람의 얼굴이) 붉은, 혈색 좋은, 홍조를 띤"],["decipher","타동사","(암호 등을) 판독[해독]하다 = decode, decrypt"],["comparison","명사","① 비교 ② <부정문에서> 비교의 여지"],["eclectic","형용사","① 취사선택하는 ②(취미·의견이) 폭넓은"],["paralyze","타동사","마비시키다; 무력하게 만들다"],["monopoly","명사","① 독점, 전매; 독차지 ② 독점[전매] 상품"],["somber","형용사","① 어두컴컴한, 거무스름한 ② 침울한, 우울한"],["aggrandize","타동사","① 확대[증대, 강화]하다② 과장하다"],["diametric","형용사","① 정반대의, 서로 용납되지 않는② 직경의"],["howl","동사","① 짖다, 멀리서 짖다 바람이 윙윙거리다"],["alert","형용사","① 방심하지 않는, 경계하는② 기민한, 민첩한"],["puny","형용사","① 왜소한, 아주 작은② 하찮은, 보잘것없는"],["segment","명사","단편, 조각; 부분, 구획 동사] 나누다, 분할하다"],["estate","명사","① 토지; 사유지 ② 재산, 유산; 재산권"],["quake","자동사","① 떨다, 전율하다 ② 흔들리다, 진동하다"],["nebulous","형용사","① 흐린, 안개 낀; 애매한, 모호한, 불분명한"],["dull","형용사","① 무딘, 둔한; 둔감한② 단조로운, 지루한"],["censure","타동사","비난하다, 책망하다 명사] 비난, 책망"],["immutable","형용사","변경할 수 없는, 불변의"],["ferment","명사","① 발효 ②소요,동요 동사] ① 발효시키다②동요시키다"],["spew","동사","① 뿜어[토해]내다, 분출하다② (먹은 것을) 토하다"],["opportune","형용사","형편이 좋은; 시의적절한"],["tenement","명사","① 공동주택 ② 가옥, 주택; 셋방"],["liquidate","동사","① 청산하다, 갚다② (회사 등을) 정리[해산]하다"],["dynasty","명사","① (역대) 왕조 ② (어떤 분야의) 명가, 명문"],["gild","타동사","① ~에 금[금박]을 입히다,② 보기 좋게 꾸미다"],["collision","명사","① 충돌 ② (의견·이해 등의) 불일치"],["via","","prep.① ~경유로, ~을 지나서, 거쳐 ② ~의 매개로"],["shield","명사","① 방패 ② 보호물, 방어물동사] ① 보호하다"],["intermission","명사","① 휴지(休止); 중지, 중단 ② 막간, 중간휴식시간"],["assume","타동사","① 추정[가정]하다② 떠맡다③가장하다, ~인 체 하다"],["filibuster","명사","① 의사 진행 방해 (연설), ② 혁명[폭동] 선동자"],["blot","명사","① 얼룩, 더러움② 흠, 오점동사] 더럽히다"],["contiguous","형용사","인접한, 근접한; 접촉하는"],["indict","타동사","기소[고발]하다"],["apothecary","명사","약제사, 약국 주인"],["stash","동사","넣어 두다, 숨기다 명사] 숨겨둔 것"]],"12":[["complacent","형용사","자기만족의, 마음속으로 즐거워하는"],["abduct","타동사","유괴하다"],["metaphysics","명사","① 형이상학, 순수 철학 ② 탁상공론"],["excessive","형용사","과도한, 지나친, 엄청난, 터무니없는"],["satiate","타동사","물리게 하다; 충분히 만족시키다"],["yen","명사","갈망, 열망, 동경"],["plague","타동사","① 애태우다, 괴롭히다②역병에걸리게 하다명사] ① 역병"],["deciduous","형용사","① 낙엽성의 ② 빠지는 ③일시적인, 덧없는"],["impugn","타동사","이의를 제기하다; 비난 공격하다, 논박하다"],["optimistic","형용사","낙관적인, 낙천적인"],["spleen","명사","① <해부> 지라, 비장(脾腸) ② 울화, 불쾌"],["elongate","동사","<물건·일을> (시간·공간적으로) 연장하다, 늘이다"],["inchoate","형용사","① 이제 막 시작한, 초기의 ② 불완전한, 미완성의"],["charlatan","명사","(지식·기술이 있는 척하는) 사기꾼, 돌팔이, 협잡꾼"],["whine","동사","① 흐느껴 울다 ② 푸념하다 명사] 칭얼거리는 소리"],["terse","형용사","(문체·표현 등이) 간결한, 생동감 있는"],["comment","명사","① 논평, 비평, 견해, 의견 ② 주석동사] ① 비평[논평]하다"],["maladroit","형용사","솜씨[재치] 없는, 서투른"],["deform","동사","① ~을 기형으로 만들다② 망가뜨리다"],["hub","명사","① 중심, 중추; 중심지② (차륜의) 바퀴통"],["garrulous","형용사","수다스러운, 말이 많은"],["prose","명사","① 산문, 산문체 ② 평범, 단조; 단조로운 이야기"],["idyllic","형용사","전원시의; 목가적인, 한가로운"],["ravage","동사","약탈[파괴]하다, 황폐하게 하다 명사] 파괴, 황폐"],["embargo","명사","출항[입항] 금지 타동사]출항[입항]을 금지하다"],["sober","형용사","① 술에 취하지 않은② 진지한; 근엄한; 차분한, 냉정한"],["tickle","동사","① 간질이다②기쁘게 하다③자극[고무]하다"],["niche","명사","① 벽감(壁龕),② 적합한 지위[장소], 적소"],["annihilate","동사","① 전멸[절멸]시키다 ② 무효로 하다, 폐지하다"],["standstill","명사","정지, 멈춤, 휴지(休止); 정체, 답보상태"],["redoubtable","형용사","경외할만한, 강력한, 가공할, 무서운"],["mobile","형용사","① 움직이기 쉬운 ② 변하기 쉬운, 변덕스러운"],["pacify","동사","① 달래다, 진정시키다 ② (식욕 등을) 채우다"],["cacophony","명사","불협화음; 불쾌한 음조, 소음"],["disguise","명사","① 변장, 가장, 위장② 속이기, 겉꾸미기타동사]변장하다"],["seismic","형용사","① 지진의, 지진에 의한② (영향․규모가) 엄청난"],["favorable","형용사","① 우호적인, 호의적인; 찬성[승낙]하는② 유리한"],["herculean","형용사","① (H-) 헤라클레스의, 힘이 장사인② 아주 어려운"],["ventilate","타동사","① (방 등을) 환기하다② 표명하다"],["fortress","명사","요새, 성채; 요새지; 견고[안전]한 곳"],["pharisaic","형용사","(신앙보다) 형식에 치중하는; 위선적인"],["sphere","명사","① 구(球), 둥근 물체 ②영역, 범위, 분야"],["brag","동사","자랑하다, 뽐내다, 허풍떨다 명사] ① 자랑, 허풍; 자랑거리"],["dole","명사","① 시주, 구호품, 의연품② (the ∼) 실업[실직] 수당"],["appraise","타동사","① 평가하다② 감정하다, 값을 매기다"],["urgent","형용사","① 긴급한, 시급한, 다급한② 마구 재촉하는"],["local","형용사","① 공간의, 장소의 ② 지방의, 고장의"],["benefactor","명사","은인; 후원자, 기부자"],["abundant","형용사","풍부한, 많은"],["decoy","명사","유인하는 사람[물건], 미끼 타동사](미끼로) 유인하다"]],"13":[["periodic","형용사","① 주기적인, 정기적인 ② 간헐적인, 이따금의"],["dank","형용사","눅눅한, 축축한"],["obey","동사","(명령·법 등을) 따르다, 순종[복종]하다"],["lopsided","형용사","한쪽으로 기운, 균형이 안 잡힌, 편향적인"],["jaunty","형용사","① 경쾌한, 명랑한, 쾌활한 ② 말쑥한, 멋진"],["abnormal","형용사","비정상적인"],["sanctity","명사","신성함, 존엄성; 성스러움"],["miserly","형용사","인색한, 구두쇠[수전노]인, 욕심 많은"],["electrify","타동사","① 감전시키다; ~에 충전하다 ② 깜짝 놀라게 하다"],["noblesse oblige","명사","높은 신분에 따르는 도덕상의 의무, 노블리스 오블리제"],["shrink","동사","① 오그라들다; 줄다 ② 움츠리다, 겁내다"],["circumscribe","타동사","① 제한하다 ② ~의 둘레에 선을 긋다"],["whimsical","형용사","① 변덕스러운, 마음이 잘 변하는② 엉뚱한,기발한"],["tactless","형용사","재치 없는, 분별없는"],["confide","동사","① (비밀 등을) 털어놓다② 신용하다, 신뢰하다"],["plutocracy","명사","금권 정치; 금권주의; 금권 정치 국가"],["blanch","동사","① 표백하다, 희게 하다;창백하게 하다 ② 데치다"],["seamless","형용사","① 이음매[솔기]가 없는 ② 매끄러운, 완벽한"],["egregious","형용사","지독한, 터무니없는, 엄청난"],["glitch","명사","자그마한 결함; 작은 기술상의 문제"],["mete","타동사","(상·벌·보수 등을) 할당하다, 주다, 분배하다"],["internal","형용사","① 내부의, 안의; 체내의② 내면적인, 정신적인"],["aim","명사","① 목적, 목표 ② 겨냥, 조준동사] ① 목표하다"],["creed","명사","(종파·교파의) 교리, 신조"],["oppressive","형용사","① 압제적인, 억압적인, 포악한 ② 답답한"],["slay","동사","① 죽이다, 살해하다; 학살하다② 절멸시키다"],["career","명사","① (직업상의) 경력, 이력, 생애② (일생의) 직업"],["incipient","형용사","시초의, 발단의, 초기의"],["mammal","명사","포유동물"],["disingenuous","형용사","솔직하지 않은, 불성실한"],["preserve","동사","① 보존하다, 유지하다 ② 보호하다, 지키다"],["specimen","명사","견본, 표본"],["annotate","동사","주석[주해]을 달다"],["ensemble","명사","① 총체; (예술 작품 등의) 전체적 효과"],["torture","명사","① 고문② 심한 고통, 고뇌타동사] ① 고문하다"],["bulk","명사","① 크기, 부피, 용적② 대부분, 큰 규모"],["reciprocal","형용사","① 상호간의, 호혜적인 ② 교환으로 주는, 답례의"],["deity","명사","① 신(神) = god ② 신위, 신성, 신격"],["furnish","동사","① 공급하다, 제공하다, 주다 ② ~에 갖추다"],["vintage","명사","①포도주형용사] ① 오래되고 가치 있는, 낡은, 유서 있는"],["humble","형용사","① 겸손한, 겸허한 ② 천한, 비천한 ③ 초라한"],["dominate","동사","① 지배하다, 위압하다 ② 우위를 차지하다"],["libertine","명사","방탕자, 난봉꾼 형용사] 방탕한"],["despot","명사","전제 군주, 독재자; 폭군"],["feeble","형용사","① 약한, 가냘픈, 연약한② 약한, 박약한"],["imperil","타동사","위태롭게 하다, 위험에 빠뜨리다"],["backwater","명사","① 역류(逆流), 배수② (문화 등의) 침체 상태"],["adapt","동사","① 적합시키다, 조정하다 ② 개작하다 ③ 적응하다"],["script","명사","① 손으로 쓴 글② 원고; 각본, 대본"],["ramble","동사","① 산책[소요]하다,거닐다② 두서없이 이야기하다"]],"14":[["harness","타동사","(동력으로) 이용[활용]하다"],["impetuous","형용사","성급한, 충동적인"],["manifesto","명사","선언문, 성명서"],["rehearse","동사","① 연습하다, 시연하다② 열거하다"],["commotion","명사","동요; 소동, 소란, 폭동"],["numerous","형용사","① 다수의, 수많은 ② 다수로 이루어진"],["sequel","명사","① 속편, 후편 ② 귀추, 결과, 결말"],["distinguish","동사","① 구별[식별]하다[from]; 분류하다② 특징지우다"],["partisan","형용사","당파적인, 편파적인명사] 한동아리, 도당"],["additive","형용사","부가적인; 덧셈의 명사] 부가물, 첨가물, 첨가제"],["qualify","동사","① ~에게 자격[권한]을 주다③자격을[면허를] 따다"],["generic","형용사","① 일반적인, 포괄적인"],["sanguine","형용사","① 낙관적인, 쾌활한 ② 혈색이 좋은"],["elixir","명사","만병통치약, 영약[묘약]"],["abound","자동사","많이 있다, 풍부하다"],["underdog","명사","패배자; 희생자, 약자"],["tedious","형용사","지루한, 싫증나는"],["bequeath","타동사","① 유언으로 증여하다, 유증하다② 남기다"],["entry","명사","① 들어감, 입장; (배우의) 등장 ② 참가, 가입"],["laudatory","형용사","칭찬의, 찬미의"],["soil","명사","① 토양, 흙; 땅 동사] 더럽히다"],["pittance","명사","① 적은 생활비[수입] ② 소량, 약간"],["venerate","타동사","존경하다, 숭배하다"],["thesis","명사","① 명제; 주제, 논제② 학위[졸업] 논문"],["discipline","명사","① 훈련, 규율, 훈육; 단련, 수양 ② 통제, 자제"],["posthumous","형용사","사후(死後)의; 유복자로 태어난"],["shed","동사","① 흘리다 ② 발산하다 ③ 버리다"],["hirsute","형용사","털이 많은; 텁수룩한"],["instinct","명사","① 본능; (종종 pl.) 직관, 육감② 천성"],["condescend","자동사","① 자신을 낮추다② 친절히 하다, 생색을 내다"],["apathetic","형용사","무관심한, 냉담한"],["perjury","명사","위증(죄)"],["stealthy","형용사","살며시 하는, 남몰래 하는, 은밀한"],["excel","동사","① 빼어나다, 탁월하다② (남을) 능가하다"],["depredation","명사","약탈; (보통 pl.) 약탈 행위; 파괴 (흔적)"],["contemn","타동사","경멸[모욕]하다, 업신여기다"],["vendor","명사","① 행상인, 파는 사람, 매각인 ② 자동판매기"],["faithful","형용사","① 충실한, 성실한, 믿을 수 있는 ② 충실한, 정확한"],["asseverate","타동사","언명[단언]하다; (~라고) 단호히 주장하다"],["candid","형용사","① 솔직한, 정직한; 노골적인 ② 공정한, 공평한"],["sophist","명사","궤변가"],["rally","동사","불러 모으다; 모이다, 결집하다 명사] 집회, 대회"],["bout","명사","① 한 판 승부② 한 차례, 한바탕 ③ (일시적인) 기간"],["ogle","동사","추파를 던지다"],["legend","명사","① 전설, 설화② 전설적인 인물"],["inculcate","타동사","(사상·지식 등을) 가르치다, 심어주다"],["dejected","형용사","낙담한, 낙심한"],["marvel","명사","① 놀라운 일, 경이(驚異), 불가사의 동사] 놀라다"],["advert","자동사","① 언급하다② 주의를 돌리다 명사] 광고"],["miserable","형용사","① 불쌍한, 비참한, 가련한 ② 초라한, 궁핍한"]],"15":[["weird","형용사","기묘한, 이상한; 수상한; 섬뜩한"],["impede","타동사","방해하다, 지체시키다"],["deleterious","형용사","해로운, 유해한"],["rate","명사","① 비율② 속도③ 가격, 시세 ④ 요금, 사용료"],["sardonic","형용사","냉소적인, 조소하는, 빈정대는"],["throe","명사","(보통 pl.) 심한 고통, 격통, 심한 고민"],["moral","형용사","① 도덕의, 윤리의 ② 훈계적인, 교육적인"],["gnaw","동사","① 쏠다, 갉아먹다② 부식하다③괴롭히다"],["regimen","명사","① 식이요법; 처방; 투약용법 ② 통치, 관리"],["slack","형용사","① 느슨한, 늘어진 ② 부주의한, 태만한③침체된"],["complicated","형용사","복잡한, 까다로운; 번거로운, 알기 어려운"],["neophyte","명사","① 초보자, 초심자 ② 신개종자"],["old-fashioned","형용사","구식[고풍]의, 시대[유행]에 뒤진"],["dirge","명사","장송곡, 애도가, 만가(挽歌), 비가(悲歌)"],["permeate","동사","① 스며들다, 침투하다 ② 충만하다"],["identical","형용사","동일한, 똑같은"],["spate","명사","① 홍수, 호우(豪雨) ② 대량, 다수[of]"],["bother","동사","① 걱정하다, 근심[고민]하다 ② 신경 쓰이게 하다"],["fiesta","명사","① 축제, 제전 ② (종교적) 축제"],["effete","형용사","① 기운[활력]이 빠진, 지친; 퇴폐적인; 쇠약해진"],["possess","타동사","① 소유하다, 가지고 있다② 지니다, 갖추고 있다"],["indignation","명사","분개, 분노"],["acquaint","타동사","숙지시키다, 익숙하게 하다; 알리다"],["pliant","형용사","고분고분한, 순종적인"],["stiff","형용사","① 뻣뻣한, 경직된, 굳은② (경쟁이) 치열한, 심한"],["haul","동사","① 잡아끌다, 끌어당기다② (차로) 운반하다"],["courteous","형용사","예의 바른, 정중한"],["emanate","동사","(어떤 느낌․특질 등을) 발하다[내뿜다]"],["ken","명사","① 시야; 이해, 지식② 소굴, 은신처"],["maudlin","형용사","눈물 잘 흘리는, 감상적인"],["loosen","동사","① 풀다, 늦추다② (통제·규제 등을) 완화하다"],["solstice","명사","지점; 최고점, 극점, 전환점"],["authentic","형용사","① 진짜의, 진본인; 사실의② 믿을 만한, 확실한"],["behemoth","명사","거대한 사람[동물, 것, 조직, 기업체]"],["abstract","형용사","추상적인, 이론적인 타동사]추출하다; 요약하다"],["germane","형용사","밀접한 관련이 있는, 적절한"],["vaccination","명사","백신[예방] 접종, (특히) 종두"],["tantalize","타동사","감질나게 하여 괴롭히다, 감질나게 하다"],["default","명사","① 불이행, 태만; 채무 불이행, 결핍"],["alienate","타동사","① 멀리하다, 소원하게 하다 ② 딴 데로 돌리다"],["megalomania","명사","과대망상, 과대망상증"],["compliment","명사","칭찬, 찬사 타동사]칭찬하다, 찬사를 보내다"],["lackluster","형용사","광택이 없는; 활기 없는, 흐리멍텅한, 시들해진"],["fallacy","명사","잘못된 생각; 오류"],["cavernous","형용사","① 동굴 같은, 동굴이 많은 ② 움푹 들어간"],["essential","형용사","① 필수적인, 불가결한 ② 본질적인, 근본적인"],["shrill","형용사","째는 듯한, 날카로운 동사] 날카로운 소리를 내다"],["anthem","명사","성가, 찬송가; 축가"],["dispense","동사","① 분배하다, 나누어 주다 ② 조제하다, 투약하다"],["pantry","명사","식료품 저장실, 찬방(饌房), 식기실"]],"16":[["clarify","동사","① 분명[명료]하게 하다 ② 맑게 하다"],["metaphor","명사","은유(隱喩), 비유; 은유[비유] 표현"],["irate","형용사","성난, 격노한"],["vague","형용사","막연한, 애매한, 모호한"],["recount","타동사","자세히 말하다, 이야기하다; 열거하다"],["stud","명사","장식 못[정]; 장식 단추 타동사] ① ~에 온통 박다, 흩뿌리다"],["pollutant","명사","오염물질; 오염원"],["ensnare","타동사","덫으로 잡다; (함정에) 빠뜨리다, 유혹하다"],["skimp","동사","인색하게 굴다, 감질나게 주다, 절약하다"],["heathen","명사","① 이교도; 불신앙자 ② 미개인, 교양이 낮은 사람"],["factor","명사","요인, 인자, 요소"],["salient","형용사","현저한, 두드러진"],["malicious","형용사","악의[적의] 있는, 심술궂은"],["pose","동사","① 자세[포즈]를 취하다 ② 제기하다 명사] 자세"],["referendum","명사","국민투표, 총선거"],["diction","명사","① 말씨, 말투; 어법 ② 발성법, 발음"],["acquit","타동사","① 석방하다, 무죄를 선언하다[of] ② 면제해 주다"],["subsidy","명사","(국가의) 보조[장려]금, 교부금, 기부금"],["empirical","형용사","경험[실험]에 의한, 실증적인"],["oblation","명사","① 봉헌, 봉납; 봉납물, 공물 ② 기부"],["decimate","타동사","① 대량으로 죽이다 ② 심하게 훼손하다"],["implicit","형용사","① 함축적인, 암시적인, 은연중의 ② 절대적인, 맹목적인"],["misprision","명사","① (공무원의) 직무 태만, 부정행위② 범죄 은닉"],["jaundiced","형용사","① 황달에 걸린 ② 편견을 가진"],["rob","동사","① ~에서 강탈[약탈]하다② ~에서 ...을 빼앗다"],["argument","명사","논의, 논쟁; 말다툼"],["bigotry","명사","편견, 편협"],["lament","동사","① 슬퍼하다, 비탄하다; 애도하다 ② 후회하다"],["connotation","명사","① 언외의 의미, 함축 ② <논리학> 내포"],["insert","타동사","① 끼워 넣다, 끼우다, 삽입하다 ② 적어 넣다"],["fecund","형용사","① 다산의; (땅이) 비옥한, 기름진"],["demonstrate","동사","① 논증하다② 드러내다③시위 운동을 하다"],["necrology","명사","① 사망자 명부, 사망자 명단 ② 사망 기사"],["arbitrary","형용사","① 임의의, 제멋대로의 ② 전횡적인, 독단적인"],["gear","명사","① 기어, 톱니바퀴 (장치) ② 장비, 도구"],["unanimous","형용사","만장일치의"],["telepathy","명사","텔레파시, 정신 감응(능력)"],["condense","동사","① (기체가) 응결되다; 응결시키다 ② 요약하다"],["dementia","명사","<의학> 치매(癡呆)"],["scrupulous","형용사","① 빈틈없는, 꼼꼼한② 양심적인"],["behoove","동사","(~하는 것이) 의무이다; ~할 필요가 있다"],["latitude","명사","① 위도 ② 폭, (허용) 범위, 자유"],["tranquil","형용사","고요한, 평온한"],["omniscient","형용사","모든 것을 다 아는, 전지(全知)의, 박식한"],["avenge","동사","복수하다, 원수를 갚다, 앙갚음하다"],["eerie","형용사","으스스한, 기분 나쁜, 무시무시한"],["paradigm","명사","① 사고의 틀② 모범, 범례, 실례"],["cantankerous","형용사","성미가 고약한, 심술궂은, 불평을 달고 사는"],["painstaking","형용사","수고를 아끼지 않는, 근면한, 성실한"],["hedonism","명사","쾌락[향락]주의"]],"17":[["quaint","형용사","① 기묘한, 기이한, 이상한 ② 예스런 멋이 있는"],["epicure","명사","미식가, 식도락가"],["autocratic","형용사","독재자의; 독재적인; 독재[전제] 정치의"],["proponent","명사","제안자, 발의자; 옹호자, 지지자"],["obtain","동사","① 얻다, 입수하다 ②존재하다, 유행하다"],["concave","형용사","오목한"],["sibling","명사","형제, 자매; 의형제"],["rapacious","형용사","강탈하는; 탐욕스러운"],["intervene","자동사","① 끼어들다, 개입하다 ② 중재하다"],["bombastic","형용사","과장된, 허풍떠는"],["decline","동사","① 거절하다 ② 기울다, 내리막이 되다"],["impertinent","형용사","① 주제넘은, 뻔뻔스러운 ② 무관계한, 적절하지 않은"],["scatter","동사","흩어지다, 흩어버리다; 분산시키다, 쫓아버리다"],["vertex","명사","① 정점, 절정 ② <천문학> 천정"],["aberrant","형용사","정도를 벗어난, 비정상적인, 일탈적인"],["interact","자동사","상호 작용하다, 서로 영향을 주다; 교류하다"],["sly","형용사","① 교활한, 간교한 ② 은밀한 ③ 장난꾸러기의"],["casuistry","명사","궤변, 속임수, 견강부회"],["torment","명사","고통, 고뇌 타동사]괴롭히다; 고문하다"],["legitimate","형용사","합법적인, 정당한; 정통의; 적출의"],["second-hand","형용사","① 중고의, 고물의 ② 간접적인, 전해들은"],["percussion","명사","① 충격, 충돌 ② 진동, 격동 ③ 타악기 연주"],["relapse","명사","① 되돌아감, 퇴보 ② 재발"],["manumit","타동사","(농노·노예를) 석방하다"],["diabolical","형용사","① 끔찍한, 불쾌한 ② 사악한, 악마 같은"],["spillover","명사","① 넘침, 과잉 ② 여파"],["gainsay","타동사","부정하다, 반대하다"],["barrack","명사","막사, 병영"],["sapient","형용사","매우 지적인, 현명한, 박식한"],["pillage","명사","약탈, 강탈; 약탈품, 노획품"],["desolate","형용사","① 황량한, 황폐한 ② 사는 사람이 없는; 쓸쓸한"],["various","형용사","여러 가지의, 가지각색의, 다양한"],["flatter","동사","① ~에게 아첨하다; 우쭐하게 하다 ② 돋보이게 하다"],["economical","형용사","경제적인; 실속 있는; 절약하는, 검약한"],["tavern","명사","① 선술집 ②여인숙, 여관"],["assure","타동사","① 보증하다, 보장하다 ② 안심시키다, 확신시키다"],["colossal","형용사","거대한, 엄청난"],["nepotism","명사","친족 등용, 족벌주의"],["weld","동사","① 용접하다, 밀착시키다 ② 결합시키다, 합치다"],["adversity","명사","역경; 불행, 불운"],["mandatory","형용사","의무적인, 강제적인"],["high-end","형용사","최고급인, 최첨단의, 최고의, 고성능의"],["emulate","타동사","① 모방하다, 흉내내다 ② 우열을 다투다, 경쟁하다"],["logomachy","명사","① 언쟁, 말다툼, 입씨름 ② 글자 맞추기 놀이"],["cheat","명사","① 속임수, 사기 ② 사기꾼, 협잡꾼"],["parochial","형용사","① 지역주의의 ② 좁은, 편협한"],["determination","명사","① 결심, 결의, 투지 ② 결정, 판결, 해결, 종결"],["accumulate","동사","(서서히) 모으다, 축적하다"],["mien","명사","행실, 태도, 몸가짐, 처신"],["far-fetched","형용사","억지스러운, 믿기지 않는"]],"18":[["clumsy","형용사","서투른; 어색한"],["decry","타동사","헐뜯다, 공공연히 비난하다"],["introduction","명사","① 도입, 전래 제출 ② 소개; 첫 경험, 처음 접함; 개론"],["viable","형용사","① 실행 가능한 ② 살아갈 수 있는, 생명력 있는"],["backfire","자동사","역효과를 낳다, 엉뚱한 결과를 낳다"],["underpinning","명사","① 지주, 받침대 ② 기초, 기반, 지지"],["tender","형용사","① 상냥한, 다정한②부드러운, 약한"],["scapegoat","명사","희생양, 남의 죄를 대신 지는 사람"],["doublespeak","명사","얼버무리는 말, 애매모호한 말"],["quantify","타동사","수량화하다, 양을 재다"],["perigee","명사","근지점"],["squeeze","동사","① 짜다, 압착하다② 수분을 짜다 ③밀어넣다"],["aisle","명사","통로; 복도"],["naive","형용사","① 순진한, 때 묻지 않은 ② 고지식한, 생각이 얕은"],["detached","형용사","① 분리된, 고립된 ② 초연한, 무관심한 ③ 공정한"],["incite","타동사","선동[조장]하다; 격려하다, 고무하다"],["plaintive","형용사","애처로운, 구슬픈"],["hemorrhage","명사","출혈 동사] (다량으로) 출혈하다"],["snatch","동사","① 와락 붙잡다, 움켜쥐다, 잡아채다 ② 급히 먹다"],["affable","형용사","상냥한, 붙임성 있는, 친절한"],["massacre","명사","대량학살 타동사]대량학살하다"],["poll","동사","① 투표하다 ② 여론 조사를 하다"],["effulgent","형용사","찬란히 빛나는, 광휘 있는, 눈부신"],["recapitulate","동사","요점을 되풀이하여 말하다, 요약[개괄]하다"],["opium","명사","아편"],["meditate","동사","명상[숙고]하다"],["ransom","명사","몸값, 배상금"],["tantamount","형용사","동등한, 같은, 상당하는"],["load","명사","① 적하, 짐 ② 무거운 짐, 부담; 근심, 걱정"],["concoct","타동사","①혼합하여 만들다 ②지어내다, 음모를 꾸미다"],["skeptical","형용사","의심 많은, 회의적인"],["formula","명사","① 공식, 식 ② 정해진 말씨 ③ 방식, 판에 박힌 방식"],["hazardous","형용사","위험한; 모험적인"],["saunter","자동사","산책하다, 어슬렁거리다; 빈둥거리다"],["monotheism","명사","일신교, 유일신교"],["elucidate","동사","해명하다, 명료하게 하다"],["passionate","형용사","열정적인, 열렬한, 정열적인"],["choreography","명사","안무, 연출"],["atone","동사","속죄하다, 벌충하다"],["global","형용사","① 공 모양의, 구형의 ② 세계적인, 전 세계의"],["falsify","동사","① 위조하다 ② ~의 거짓을 입증하다"],["bivouac","명사","야영, 야영지 자동사]야영하다, 노숙하다"],["odd","형용사","① 이상한, 기묘한; 색다른 ② 홀수의"],["somersault","명사","① 재주넘기, 공중제비 ② 180도 전환, 전향"],["ethos","명사","특질; (사회·집단의) 기풍; 풍조"],["immediate","형용사","① 아주 가까이의, 바로 이웃한 ② 즉각적인, 당면한"],["thread","명사","① 실, 꼰 실; 줄기 ② 줄거리, 맥락"],["accommodate","동사","① 숙박시키다, 수용하다 ② 적응하다 ③ 조절하다"],["coffin","명사","관(棺), 널"],["dissension","명사","의견 차이; 불화; 알력, 분쟁"]],"19":[["rebuke","타동사","비난하다, 꾸짖다"],["genuine","형용사","① 진짜의, 진품의② 진실한, 성실한 ③ 순종의"],["chunk","명사","① 큰 나무 토막; 큰 덩어리 ② 상당한 양"],["inadvertent","형용사","① 고의가 아닌, 우연의 ② 부주의한, 소홀한"],["brood","동사","① 알을 품다, 보금자리에 들다 ② 곰곰이 생각하다"],["stenography","명사","속기; 속기술, 속기법"],["malignant","형용사","① 악의있는 ② 악성의"],["plenary","형용사","① 충분한; 무조건의, 절대적인 ② 전원 출석의"],["slim","형용사","① 호리호리한, 가는, 가냘픈 ② 얼마 안 되는, 불충분한"],["taunt","명사","비웃음, 모욕, 조롱 타동사]비웃다"],["embark","동사","① 승선하다, 출항하다 ② 착수하다, 시작하다, 종사하다"],["daring","형용사","대담한, 용감한 명사] 대담성, 용기"],["nod","동사","① 끄덕이다; 끄덕여 나타내다 ② 졸다, 꾸벅꾸벅 졸다"],["disposition","명사","① 배열, 배치 ② 처분, 매각, 정리 ③ 성향, 기질"],["shoal","명사","① 모래톱, 여울목; 얕은 곳 ② 떼, 무리"],["inherit","동사","① 상속하다, 물려받다 ②물려받다, 유전하다"],["far-reaching","형용사","멀리까지 미치는, 광범위한; 원대한"],["charge","명사","① 책임, 담당 ② 비난; 기소, 고발 ③돌격, 급습"],["effrontery","명사","뻔뻔스러움, 철면피, 염치없음"],["solid","명사","고체, 고형물"],["long-winded","형용사","숨이 긴; 길고 지루한, 장황한"],["acquired","형용사","① 취득한, 획득한 ② 습득한; 후천적인"],["haven","명사","① 항구, 정박소 ② 안식처, 피난처"],["percolate","동사","① 거르다, 여과하다 ② 스며들다, 서서히 퍼지다"],["terrific","형용사","① 굉장한, 대단한; 훌륭한 ② 격심한, 맹렬한; 무서운"],["warrant","명사","①영장 ② 정당한 이유, 근거 ③보증, 보증이 되는 것"],["passive","형용사","① 수동의, 수동적인, 수세의 ② 무저항의, 순종하는"],["javelin","명사","던지는 창; 창던지기 (경기)"],["smuggle","동사","밀수입[밀수출]하다; 밀항하다"],["exact","형용사","① 정확한, 정밀한② 꼼꼼한; 엄격한, 가혹한"],["afflict","타동사","괴롭히다, 피해를 입히다"],["out-of-date","형용사","구식인, 시대에 뒤떨어진, 낡은"],["vomit","동사","토하다, 게우다명사] 구토; 분출; 구토물"],["circumstance","명사","상황, 환경; 주위의 사정"],["lesion","명사","외상; (조직·기능의) 장애, 손상; 병변"],["merger","명사","합병, 합동; 흡수 합병"],["bestial","형용사","짐승의, 짐승 같은, 흉포한, 야만스러운"],["deficiency","명사","① 결핍, 부족 ② 결함, 결점"],["apologize","동사","① 사과하다, 용서를 빌다 ② 변호하다, 변명하다"],["illusion","명사","① 환상, 환각 ② 오해, 착각"],["cognitive","형용사","인식의; 인식력이 있는"],["velocity","명사","속도"],["flabbergast","타동사","소스라쳐 놀라게 하다, 어리둥절케 하다"],["deft","형용사","교묘한, 능숙한, 손재주가 좋은."],["appendix","명사","① 부속물, 부가물; 부록 ② 충수, 맹장"],["boundary","명사","경계, 경계선; 한계, 범위, 영역"],["pallid","형용사","창백한, 핼쑥한"],["responsible","형용사","① 책임이 있는, 책임을 져야 할 ② ~의 원인이 되는"],["muzzle","명사","① 입마개, 재갈 ②코끝, 주둥이 ③ 총구"],["scrap","명사","조각, 단 타동사]폐기하다, 버리다"]],"20":[["accelerate","동사","가속하다, 촉진시키다; 빨라지다"],["tenuous","형용사","① 가느다란; 희박한, 엷은 ② 미약한, 빈약한"],["mayhem","명사","① 신체 상해, 폭력 ② 대혼란, 소동, 아수라장"],["deceit","명사","속임수, 사기, 기만, 책략"],["commodious","형용사","넓은, 널찍한"],["reconcile","타동사","① 화해시키다 ② 조화시키다"],["kernel","명사","① 낟알, 인 ② 핵심, 요점"],["sedulous","형용사","근면한, 부지런한, 꾸준히 공부하는"],["chance","명사","우연; 기회; 승산, 가능성, 가망"],["bulge","명사","① 부푼 것, 돌출 ② 일시적 증가, 팽창, 급증"],["misconception","명사","오해, 잘못된 생각"],["defy","타동사","① 무시하다, 문제시하지 않다 ② 반항하다"],["persistent","형용사","① 고집하는, 완고한 ② 영속하는, 끊임없는"],["liable","형용사","① 책임이 있는 ② ~하기 쉬운; ~할 것 같은"],["specialize","동사","전공하다, 전문적으로 다루다"],["frolic","명사","장난, 들떠서 떠들어댐, 야단 법석; 유쾌한 모임"],["desirable","형용사","① 바람직한, 호감 가는 ② 성적 매력이 있는"],["belated","형용사","늦은, 뒤늦은"],["aggressive","형용사","① 침략적인, 공격적인 ② 적극적인"],["parliament","명사","국회; 의회"],["obstreperous","형용사","① 떠들썩한, 시끄러운 ② 사납게 날뛰는"],["statistics","명사","① 통계, 통계표, 통계 자료 ② 통계학"],["inactive","형용사","활동하지 않는, 활발하지 않은; 게으른"],["uproot","동사","① 뿌리째 뽑다② 근절시키다"],["nasty","형용사","① 불쾌한, 싫은; 몹시 불결한 ② 못된, 고약한"],["askew","형용사","d.형용사] 비스듬히, 비뚤어지게, 일그러져"],["impel","타동사","① 재촉하다, 몰아대다 ② 추진시키다"],["hangover","명사","① 잔존물, 유물 ② 숙취, 부작용 ③ 후유증"],["exponential","형용사","① 설명자의; 대표적 인물의 ② 기하급수적인"],["gauge","타동사","① 재다, 측정하다 ② 평가하다"],["conglomerate","명사","집합체; 합기업"],["include","동사","포함하다, 포함시키다"],["encyclopedia","명사","백과사전, 전문사전"],["sift","동사","① 체로 치다, 거르다 ② 면밀히 조사하다, 심문하다"],["perfunctory","형용사","마지못한, 형식적인, 겉치레의"],["fidgety","형용사","안절부절못하는, 조바심 내는"],["emerge","자동사","① 나타나다, 출현하다 ② 벗어나다, 빠져나오다"],["taper","동사","① 점점 가늘어지다, 뾰족하게 하다 ② 차차 약해지다"],["severe","형용사","① 극심한, 심각한 ② 가혹한, 혹독한"],["vanguard","명사","전위, 선봉; 선구자"],["obliterate","타동사","없애다, 지우다; 삭제하다"],["tempest","명사","① 사나운 비바람, 폭풍우 ② 야단법석, 대소동"],["marginal","형용사","① 가장자리의, 경계의 ② 미미한, 중요하지 않은"],["stillborn","형용사","① 사산된, 유산된 ② 효과가 없는, 빛을 보지 못한"],["clutter","동사","어질러놓다, 어지럽히다 명사] 잡동사니; 어수선함"],["premium","명사","① 할증금; 할증가격② 상금; 포상금, 상여"],["heinous","형용사","악랄한, 극악한, 가증스런"],["deluge","명사","① 대홍수 ② 쇄도, 범람"],["extenuate","타동사","① 가볍게 하다, 경감하다 ② 변명하다, ~의 구실이 되다"],["tropic","형용사","열대 지방의, 열대성의, 열대 지방 특유의"]],"21":[["wane","자동사","① 약해지다, 쇠퇴하다 ② 이지러지다"],["individuality","명사","개성, 특성, 인격"],["exhilarating","형용사","기분을 돋우어 주는, 유쾌하게 하는; 상쾌한"],["detergent","명사","세제"],["recipient","명사","수령인, 수취인 형용사] 받아들이는, 감수성이 있는"],["compatible","형용사","① 양립할 수 있는, 적합한② 호환되는"],["squat","동사","① 웅크리다 ② 무단 점유하다 형용사] ① 땅딸막한"],["horizon","명사","① 수평선 ② 시계 ③ 범위, 영역"],["incessant","형용사","끊임없는, 부단한"],["mastermind","명사","기안자, 지도자, 주모자 타동사] 지휘하다"],["garish","형용사","지나치게 화려한, 야한"],["impoverish","타동사","① 빈곤하게 하다 ② 떨어뜨리다, 저하시키다"],["seasoned","형용사","① 조미된, 맛을 낸 ② 경험 많은, 노련한"],["penal","형용사","형의, 형벌의; 형법상의, 형사상의"],["deputy","명사","대리(인);부관;대표자,대의원"],["persuade","동사","설득하다, 권유하여 ~하게 하다"],["onlooker","명사","구경꾼, 방관자"],["amend","동사","① 수정하다 ② 바로잡다"],["sojourn","명사","체류 자동사]머무르다, 살다, 체류하다"],["philanthropy","명사","① 박애, 자선, 인자 ② 자선활동, 자선단체"],["lissome","형용사","호리호리한, 유연한, 날씬한"],["marital","형용사","결혼의, 혼인의, 부부간의"],["bolster","타동사","① 강화하다 ② 지지하다; 보강하다"],["stale","형용사","① 상한; 김빠진 ② 퀴퀴한 ③ 진부한"],["cosmic","형용사","① 우주의 ② 무한한, 광대무변한, 장대한"],["deplore","타동사","슬퍼하다, 한탄하다"],["tonic","명사","강장제, 활기를 돋우는 것"],["preferable","형용사","차라리 나은, 오히려 더 나은, 바람직한"],["veto","타동사","거부하다 명사] ① 거부권 ② 금지"],["agile","형용사","① 날렵한, 민첩한 ② 재빠른, 기민한"],["fealty","명사","① 충성의 맹세 ② 충실"],["threaten","동사","① 위협하다 ② 조짐을 보이다"],["aphorism","명사","금언, 격언, 경구"],["concentration","명사","① 집중, 전념 ② 농도"],["ungainly","형용사","우아하지 않은, 보기 흉한, 어색한"],["shortcoming","명사","결점, 단점"],["remark","동사","① 논평하다, 발언하다 ② 깨닫다"],["mountebank","명사","① 엉터리 약장수 ② 사기꾼, 협잡꾼"],["debunk","타동사","틀렸음을 밝혀내다; 폭로하다"],["quality","명사","① 질, 품질; 성질 ② 양질; 재능"],["affiance","타동사","약혼시키다명사] ① 약혼 ② 서약"],["testy","형용사","화를 잘 내는, 성미가 급한"],["encounter","동사","만나다, 부닥치다 명사] 만남, 조우"],["vendetta","명사","피의 복수, 앙갚음, 복수"],["classify","타동사","① 분류하다 ② 기밀 취급하다"],["fatuous","형용사","어리석은, 얼빠진"],["palliate","타동사","① 일시적으로 완화시키다 ② 참작하다"],["extemporaneous","형용사","① 즉흥적인, 즉석의② 일시적인"],["bastard","명사","① 서자 ② 잡종; 가짜; 열등품 ③ 새끼; 놈"],["sponsor","명사","① 스폰서 ② 발기인 ③ 보증인"]],"22":[["obsolete","형용사","더 이상 쓸모가 없는, 한물간, 구식의"],["perspicacious","형용사","이해가 빠른, 총명한, 통찰력이 있는"],["enamor","타동사","반하게 하다, 매혹하다"],["heretic","명사","이교도, 이단자"],["impatient","형용사","① 성급한, 안달하는 ② 몹시 ~하고 싶어 하는"],["salute","동사","~에게 인사하다; 맞이하다"],["mawkish","형용사","① 몹시 감상적인 ② 역겨운"],["pamphlet","명사","팸플릿, 소책자 ② 시사 논평, 소논문"],["deflect","동사","① 방향을 바꾸다 ② 모면하다"],["outdated","형용사","구식인, 시대에 뒤진"],["tally","명사","계산서; 계산 동사] ① 부합하다 ② 기록하다"],["inflate","동사","① 부풀다 ② 과장하다 ③ 팽창시키다"],["commensurate","형용사","(크기·중요도·자질 등에) 어울리는"],["smut","명사","① 검댕, 얼룩; 오점 ② 음담; 음란, 외설물"],["baffle","동사","① 당황하게 하다 ② 좌절시키다"],["transparent","형용사","① 투명한 ② 명백한, 명료한"],["sob","동사","① 흐느끼다 ② 윙윙 소리 내다 명사] 오열"],["maelstrom","명사","큰 소용돌이; 대혼란, 큰 동요"],["larceny","명사","절도죄, 도둑질"],["recur","자동사","① 재발하다 ② 되돌아가다; 되살아나다"],["yearn","동사","① 동경하다, 갈망하다 ② 그리다, 사모하다"],["pastoral","형용사","전원생활의, 목가적인 명사] 목가, 전원시"],["gateway","명사","①입구 ② ~에 이르는 길, 수단"],["hasten","동사","서두르다, 재촉하다, 촉진하다"],["ailment","명사","(가벼운) 병(病)"],["dreary","형용사","① 황량한; 쓸쓸한; 음산한 ② 따분한, 지루한"],["titanic","형용사","거대한, 엄청난"],["affect","타동사","① 영향을 미치다 ② 침범하다 ③ 감동시키다"],["felicity","명사","① 더없는 행복 ② 멋들어짐, 적절함"],["construct","타동사","① 조립하다; 건설하다 ② 꾸미다, 구성하다"],["envy","명사","① 선망; 질투 ② 선망의 대상"],["anadromous","형용사","소하성의, 강을 거슬러 올라가는"],["devout","형용사","독실한, 경건한"],["uncharted","형용사","미지의, 지도에 실려 있지 않은"],["commission","명사","① 임무; 명령 ② 위임, 위탁 ③ 위원회"],["bibliophile","명사","애서가, 서적 수집가"],["awake","동사","깨우다,각성시키다"],["defamation","명사","비방, 중상, 명예 훼손"],["elastic","형용사","① 탄력 있는 ② 유연한, 융통성이 있는"],["petrify","동사","① 석화하다 ② 아연실색케 하다"],["sophisticated","형용사","① 세련된, 교양 있는 ② 복잡한, 정교한"],["inertia","명사","① 관성, 타성 ② 활발하지 못함, 무기력함"],["whip","동사","① 채찍질하다 ② 격려하다 ③ 휘저어 거품이 일게 하다"],["vigorous","형용사","① 원기 왕성한, 활발한, 격렬한 ② 강력한; 강경한"],["outgrow","동사","① 몸이 커져서 입지 못하게 되다 ② 빨리 자라다"],["firmament","명사","하늘, 창공; 천계"],["capitalize","동사","① ~을 대문자로 쓰다 ② ~에 자본을 투자하다"],["shrine","명사","① 성체 용기; 묘 ② 전당, 성지, 순례지"],["abiding","형용사","지속적인, 변치 않는"],["modest","형용사","① 겸손한 ② 보통의 ③ 적절한 ④ 정숙한 ⑤ 검소한"]],"23":[["inane","형용사","① 어리석은, 무의미한② 공허한, 텅 빈"],["straddle","동사","① 걸터앉다 ② 기회를 엿보다 ③ ~에 걸쳐 있다"],["deficit","명사","① 부족액; 결손, 적자 ② 부족, 결함"],["perpetuate","타동사","영속하게 하다, 불멸하게 하다"],["unfold","동사","① 펴다② 펼쳐지다; 밝히다"],["euphuism","명사","화려한 문체, 과식체; 미사여구"],["refrain","자동사","그만두다, 삼가다"],["callous","형용사","무감각한, 냉담한"],["selection","명사","① 선발 ② 선정된 것들; 정선품 ③ 도태"],["diminish","동사","감소시키다; 감소하다"],["malfeasance","명사","위법행위, 배임, 부정행위"],["separate","동사","분리하다, 떼어놓다 형용사] 갈라진, 분리된"],["omnipresent","형용사","편재하는, 어디에나 있는"],["tautology","명사","같은말의 쓸데없는 반복, 동의어 중복"],["allocate","타동사","할당하다, 배분하다"],["intemperance","명사","① 무절제, 방종 ② 폭음, 폭식 ③ 난폭함"],["rotund","형용사","① 둥근 ② 통통하게 살찐 ③ 낭랑한, 잘 들리는"],["substitute","명사","대리자; 대용물, 대체물"],["wholehearted","형용사","진심으로의, 착실한, 성실한"],["demure","형용사","① 얌전한, 조용한 ② 새침 떠는, 점잔 빼는"],["soliloquy","명사","독백"],["mingle","동사","① 섞다, 혼합하다② 사귀다, 어울리다, 교제하다"],["heritage","명사","세습, 재산; 물려받은 것; 유산"],["flush","동사","① 분출하다 ② 상기되다 ③ 시험에 낙제하다"],["conducive","형용사","도움이 되는, 공헌하는"],["stalk","명사","줄기 동사] ① 몰래 접근하다 ② 스토킹하다"],["parlance","명사","(특정 집단 등의) 말투"],["marshal","동사","① 배열시키다 ② 정리하다"],["apostate","명사","배교자; 변절자"],["tolerate","타동사","① 용인하다② 참다 ③ ~에 대해 내성이 있다"],["antidote","명사","① 해독제 ② 교정 수단, 대책"],["indulgent","형용사","멋대로 하게 하는; 눈감아주는, 관대한"],["jejune","형용사","① 지식이 모자라는, 미숙한② 지루한"],["verdict","명사","(배심원의) 평결; 판단, 의견, 결정"],["garner","타동사","(정보․지지 등을) 얻다, 모으다"],["commonwealth","명사","① 국가, 국민 ② 민주국 ③ 연방; 영연방"],["perturb","타동사","교란하다, 마음을 어지럽히다"],["literal","형용사","글자 그대로의, 사실인, 과장 없는"],["dehydrate","동사","건조시키다; 수분이 없어지다"],["precaution","명사","① 조심, 경계 ② 예방책"],["vagabond","명사","방랑자, 유랑자, 부랑자"],["blossom","타동사","① 꽃이 피다② 번영하다"],["temporal","형용사","① 시간의 ② 일시적인, 잠시의 ③ 현세의"],["abominable","형용사","지긋지긋한, 혐오스러운, 가증스러운"],["covet","동사","(남의 물건을) 몹시 탐내다; 갈망하다"],["eminent","형용사","저명한, 뛰어난, 탁월한"],["labile","형용사","변하기 쉬운, 불안정한"],["familiarity","명사","① 익히 앎, 숙지, 정통 ② 친밀함"],["bleak","형용사","① 암울한, 절망적인; 궁색한 ② 차가운 ③ 황량한"],["expel","타동사","① 쫓아내다; 구제하다 ② 추방하다 ③ 배출하다"]],"24":[["feasible","형용사","① 실행할 수 있는, 가능한 ② 적합한, 편리한"],["portend","타동사","~의 전조가 되다, ~을 미리 알리다"],["dolt","명사","멍청이, 바보, 얼간이"],["endorse","타동사","① 배서하다 ② 지지하다 ③ 보증하다"],["congenital","형용사","타고난, 선천적인"],["superintend","타동사","지휘하다"],["infallible","형용사","결코 틀리지 않는, 절대 확실한"],["brand","타동사","① 낙인을 찍다 ② 오명을 씌우다"],["descendant","명사","자손, 후예"],["Mediterranean","형용사","지중해의, 지중해 연안에 사는"],["scintillating","형용사","반짝거리는; 번득이는, 재미있는"],["resurrection","명사","그리스도의 부활; 부흥, 재유행"],["touchy","형용사","화를 잘 내는, 과민한, 까다로운"],["incremental","형용사","증가의, 증대하는, 점증적인"],["attempt","타동사","① 시도하다 ② 노리다; 공격하다"],["venal","형용사","매수할 수 있는, 뇌물로 움직이는"],["copious","형용사","풍부한, 매우 많은; 내용이 풍부한"],["narcissism","명사","자기애; 자기중심주의; 나르시시즘, 자기도취증"],["malleable","형용사","① 두드려 펼 수 있는, 전성이 있는 ② 유순한"],["uproar","명사","소동, 소란; 엄청난 논란"],["rejuvenate","동사","다시 젊어지게 하다, 활기를 되찾게 하다"],["bona fide","형용사","진실된, 진심의, 성실한 형용사]d.진심으로, 성실하게"],["cram","동사","① 밀어 넣다 ② 가득 채우다③ 벼락치기 공부를 하다"],["stool","명사","① 의자 ② 변기; 대변 동사] ① 싹이 돋다 ② 끄나풀이 되다"],["hypochondria","명사","심기증, 지나친 걱정, 건강염려증"],["myriad","명사","무수한 사람, 무수한 것"],["pathology","명사","병리학; 병리; 병상"],["frown","동사","눈살을 찌푸리다, 얼굴을 찡그리다 명사] 찡그린 얼굴; 난색"],["auspice","명사","① 원조, 찬조, 보호 ②전조, 길조"],["dismiss","동사","① 해산시키다; 해고하다 ②떨쳐 버리다 ③ 묵살하다"],["opaque","형용사","① 불투명한② 불분명한, 이해하기 힘든"],["loathe","타동사","몹시 싫어하다, 혐오하다, 질색하다"],["pathetic","형용사","측은한, 비통한, 불쌍한"],["quantum","명사","① 양, 액; 할당량, 몫; 다량 ② 양자"],["exclude","타동사","① 제외하다; 추방하다 ② 고려하지 않다"],["demented","명사","① 정신 이상인, 미친, 실성한 ② 치매에 걸린"],["audacious","형용사","대담한, 뻔뻔스러운, 철면피의"],["convalescence","명사","차도가 있음; 회복(기), 요양(기간)"],["transcend","동사","초월하다, 능가하다"],["haughty","형용사","오만한, 거만한"],["oblivion","명사","망각; 잊혀짐; 잊기 쉬움"],["somatic","형용사","신체의, 육체적인"],["grasp","동사","① 붙잡다 ② 납득하다"],["enigmatic","형용사","수수께끼 같은, 불가사의한"],["belvedere","명사","전망대; (정원 등의) 전망용 정자"],["setback","명사","방해, 차질, 좌절; 역행, 퇴보; 패배, 실패"],["appreciate","동사","① 진가를 알아보다 ② 인식하다 ③ 감사하다 ④ 평가절상하다"],["picayune","형용사","보잘 것 없는, 하찮은, 무가치한"],["supreme","형용사","최고의, 최상의"],["interlude","명사","① 막간 ② 에피소드③ 막간 촌극; 간주곡"]],"25":[["alternate","동사","번갈아 일어나다, 교대로 하다"],["solidarity","명사","연대, 결속, 단결"],["tangible","형용사","만져서 알 수 있는; 실재하는; 확실한, 명백한"],["connoisseur","명사","(미술품 등의) 감정가, 감식가"],["extensive","형용사","① 광대한, 넓은 ②광범위한, 다방면에 걸치는"],["relish","동사","즐기다, 좋아하다 명사] ① 맛 ② 재미, ③ 양념, 조미료"],["bellicose","형용사","호전적인, 싸우기 좋아하는"],["victim","명사","피해자, 희생자, 환자"],["measles","명사","홍역"],["vary","동사","① 가지각색이다 ② 바꾸다, 수정하다; 변화하다"],["maternal","형용사","① 어머니의; 어머니다운, 모성의 ② 임산부의"],["strive","자동사","① 노력하다, 애쓰다, 분투하다 ② 싸우다, 겨루다"],["patriarch","명사","가장; 족장"],["hitherto","형용사","d.지금까지, 지금까지로 봐서는"],["decent","형용사","① 알맞은 ② 예의 바른"],["rosy","형용사","① 유망한, 낙관적인 ② 장밋빛의; 불그레한"],["encomium","명사","찬사, 칭찬"],["savvy","형용사","영리한 명사] 실제적 지식 동사] 알다, 이해하다"],["appease","타동사","① 달래다, 진정시키다 ② 양보하다, 유화정책을 쓰다"],["laundry","명사","세탁물; 세탁소"],["potable","형용사","마시기에 적합한"],["disperse","동사","흩어지다, 흩어지게 하다; 퍼뜨리다"],["intellect","명사","① 지력, 지성, 지능② 식자, 지식인, 인텔리"],["unwonted","형용사","평소와 다른, 이례적인, 드문, 특이한"],["comprise","타동사","포함하다; ~으로 이루어져 있다"],["autograph","명사","자필 서명, 자서, 사인 타동사]자필 서명하다"],["purview","명사","① 범위, 권한 ② 시계, 시야; 이해"],["boast","동사","자랑하다, 떠벌리다, 뽐내다 명사] 자랑; 허풍"],["faction","명사","① 당파, 파벌 ② 파벌 싸움, 당쟁, 알력, 내분"],["questionnaire","명사","질문표, 설문지, 앙케트; 설문 조사"],["enfeeble","타동사","약화시키다, 쇠약하게 하다"],["stable","","① 공통의 목적·흥미를 가진 사람들의 집단"],["gallant","형용사","용감한, 씩씩한"],["device","명사","① 장치, 기구 ② 고안; 계획; 책략, 방책"],["secrete","타동사","① 분비하다 ② 비밀로 하다, 숨기다"],["opportunist","명사","기회주의자, 편의주의자"],["consequence","명사","① 결과, 결말 ② 중요성, 중대함"],["temper","동사","① 완화시키다 ② 담금질하다; 단련시키다"],["fluctuate","동사","수시로 변하다, 변동하다, 오르내리다"],["dint","명사","① 힘, 폭력 ② 움푹 들어간 곳, 맞은 자국"],["intrude","동사","① 침입하다, 간섭하다, 방해하다 ② 강요하다, 강제하다"],["licentious","형용사","방탕한, 방종한, 음탕한"],["archenemy","명사","대적; 사탄, 악마"],["tool","명사","① 도구, 공구, 연장② 수단, 방편③ 꼭두각시"],["weep","동사","울다, 눈물을 흘리다; 비탄하다"],["consistent","형용사","① 일치하는 ② 변함없는, 시종 일관된"],["meander","동사","① 굽이쳐 흐르다 ② 정처없이 거닐다"],["sustainability","명사","지속가능성; 환경 파괴 없이 지속될 수 있음"],["vocal","형용사","① 발성의② 의견을 말하는"],["drift","명사","① 표류② 동향, 대세동사] ① 떠돌다"]],"26":[["top-down","형용사","상의하달식의"],["contrite","형용사","죄를 깊이 뉘우치는, 회개하는"],["remonstrate","동사","항의하다, 이의를 제기하다"],["enforce","타동사","① (법률 등을) 시행하다, 집행하다② 강요하다"],["subside","자동사","① 가라앉다, 진정되다② 내려앉다, 침하되다"],["immemorial","형용사","기억에 남지 않은 옛적의, 먼 옛날의, 아주 오랜"],["belonging","명사","① (pl.) 소유물, 재산; 소지품② 부속물; 성질, 속성"],["fertilizer","명사","거름, 비료, (특히) 화학 비료"],["inept","형용사","① 솜씨 없는, 서투른② 부적당한, 부절절한"],["nausea","명사","① 구역질, 메스꺼움, 욕지기; 뱃멀미② 혐오, 증오"],["likeness","명사","① 비슷함, 닮음; 유사성② 화상(畵像), 초상, 사진"],["sarcasm","명사","비꼼, 빈정거림"],["manipulate","동사","① 조종하다; 조작하다② 능숙하게 다루다"],["ample","형용사","① 풍부한, 충분한② 광대한, 넓은"],["decimal","형용사","십진법의; 소수의 / 명사] 소수; (pl.) 십진법"],["renaissance","명사","① (the R~) 문예 부흥(기), 르네상스"],["feminine","형용사","① 여자의, 여성의② 상냥한"],["discharge","동사","①해고하다; 퇴원시키다② 석방[방면]하다"],["proffer","타동사","① 내밀다, 제공하다② 내놓다, 제의하다"],["certificate","명사","증명서, (보)증서; 면허장, 자격증"],["hymn","명사","찬송가, 성가; 찬가"],["jaywalk","자동사","교통 규칙을 무시하고 횡단하다, 무단횡단하다"],["extinguish","타동사","① 끄다② (희망·정열 등을) 잃게 하다"],["straightforward","형용사","① 정직한, 솔직한②간단한, 쉬운"],["commune","자동사","친하게 이야기하다, 친하게 교제하다"],["descend","동사","① 내려가다, 내려오다② ~의 자손이다"],["paraphernalia","명사","① 자잘한 소지품[세간]② 여러 가지 용구"],["congruent","형용사","일치하는, 적합한, 조화하는"],["glossary","명사","① 용어[어휘] 사전, 소사전② 용어[어휘] 해설"],["attorney","명사","① 변호사② 대리인"],["hinder","동사","방해하다, 훼방 놓다"],["supine","형용사","① 반듯이 누운② 무관심한; 게으른, 무기력한"],["authorize","타동사","① ~에게 권한을 주다, 위임하다② 인가하다"],["obviate","타동사","(위험·곤란 등을) 제거하다, 미연에 방지하다"],["mope","동사","① 우울해하다, 의기소침하다② 헤매다"],["preponderant","형용사","무게[수·양·힘]에 있어 우세한, 압도적인"],["breach","명사","① 어김, 위반, 침해 동사] ① 깨뜨리다②어기다, 위반하다"],["tinge","타동사","① ~에 엷은 빛깔을 내다② 기미를 띠게 하다"],["attribute","타동사","① ~에 돌리다, (~의) 탓으로 하다"],["ensue","자동사","잇따라 일어나다, 결과로서 일어나다"],["salvage","명사","구조, (침몰선의) 인양 / 타동사]구출[구조]하다"],["legacy","명사","유산; 물려받은 것"],["seclude","타동사","떼어 놓다, 차단[격리]하다; 은퇴시키다"],["vocation","명사","① 직업, 생업, 장사② 천직, 사명; 사명감"],["diploma","명사","졸업장; 대학(원) 학위; 상장; 자격증"],["unseemly","형용사","모양이 흉한, 어울리지 않는; 부적당한"],["vital","형용사","① 필수적인, 매우 중요한② 생명의"],["moving","형용사","① 움직이는; 이동하는② 감동시키는"],["incumbent","형용사","① 의무로서 지워지는② 현직[재직]의"],["peripheral","형용사","주위의, 주변의; 주변적인, 지엽적인"]],"27":[["concise","형용사","간결한, 간명한"],["empathy","명사","감정이입, 공감"],["betray","동사","① 배반하다② 누설하다, 밀고하다"],["proprietor","명사","소유자; 경영자; 집주인 주인"],["sacrifice","동사","① 희생하다, 제물로 바치다② 단념하다"],["incorrigible","형용사","고질적인, 구제불능의"],["retreat","명사","① 후퇴 ② 은퇴 ③ 은신처; 요양소"],["sycophant","명사","아첨꾼, 알랑쇠"],["tart","형용사","① 새콤한, 시큼한, 짜릿한② 날카로운, 신랄한"],["keynote","명사","① 요지; 기본 방침② 으뜸음"],["wicked","형용사","못된, 사악한; 심술궂은, 악의 있는"],["disparity","명사","차이, 불일치, 불균형"],["misty","형용사","① 안개 낀 ② 희미한, 애매한"],["serenity","명사","① 고요함; 평온 ② 평온, 차분함; 침착"],["abridge","타동사","① 단축하다, 요약하다"],["livery","명사","① 간장병의; 간장색② 화를 잘 내는, 까다로운"],["apex","명사","꼭대기, 정점, 정상; 절정, 최고조"],["reactionary","형용사","반동의; 반동적인; 보수적인 명사] 반동주의자"],["demographic","형용사","인구학의, 인구통계학의"],["mend","동사","① 수선하다, 고치다 ② 개선하다"],["spooky","형용사","으스스한, 귀신이 나올 것 같은, 무시무시한"],["indolence","명사","게으름, 나태"],["unearth","타동사","① 발굴하다, 파내다 ② 발견하다, 밝혀내다"],["pedagogy","명사","교육학, 교수법, 교육"],["temperate","형용사","① 온화한 ② 삼가는, 절제하는, 온건한"],["countervail","동사","① 무효로 만들다, 상쇄하다 ② 메우다, 보상하다"],["binge","명사","떠들썩한 잔치; 술판; 흥청거림; 분수없이 마심"],["conspicuous","형용사","잘 보이는, 눈에 잘 띄는, 튀는"],["off-hand","형용사","d. 즉석에서, 준비 없이 형용사] 즉석의, 즉흥적인"],["ascertain","타동사","확인하다, 알아내다"],["gambit","명사","수, 책략"],["depict","타동사","① 그리다, 묘사하다 ② 서술하다"],["veritable","형용사","진실의, 틀림없는, 참된, 진정한"],["lapse","명사","① 경과② 실수 ③ 쇠퇴; 탈선"],["thermal","형용사","열의, 열에 의한"],["slant","타동사","① 기울어지다 ② 왜곡하다"],["conception","명사","① 개념, 생각 ② 구상, 착상, 창안; 고안, 계획"],["enrage","타동사","~을 성나게 하다, 화나게 하다"],["principal","명사","① 장, 장관; 회장 ② 주역"],["fad","명사","① 변덕 ② 유행"],["immerse","타동사","① 담그다, 가라앉히다 ② 빠져들게 하다"],["doleful","형용사","슬픈, 슬픔에 잠긴; 우울한"],["franchise","명사","① 선거권 ② 특허 ③ 시민권 ④ 독점 판매권"],["maggot","명사","① 구더기 ② 변덕, 공상, 기상"],["persist","자동사","① 고집하다, 주장하다, 집착하다"],["auxiliary","형용사","보조의, 부의; 예비의"],["enroll","동사","등록하다; 입회하다; 병적에 올리다"],["omnibus","명사","① 합승 자동차, 버스 ② 작품집"],["stir","동사","① 휘젓다 ② 흥분시키다; 자극하다, 선동하다"],["helm","명사","① 키; 조타 장치 ② 지배적인 지위, 지배"]],"28":[["dormant","형용사","잠자는, 휴면기의, 활동을 중지한"],["portent","명사","조짐, 전조"],["grab","동사","① 붙잡다, 움켜잡다 ② 가로채다, 빼앗다"],["cremation","명사","(문서의) 소각; 화장"],["plunge","동사","① 급락하다② 빠지게 하다 ③ 착수하다, 갑자기 시작하다"],["sinewy","형용사","근육질의, 힘줄의, 근육이 잘 발달한; 힘찬"],["indigenous","형용사","고유의, 원산의, 토착의"],["merge","동사","융합되다; 합병하다"],["salutary","형용사","유익한, 건전한, 이로운"],["filthy","형용사","① 아주 더러운, 불결한 ② 상스러운; 외설스러운, 음란한"],["distribute","동사","① 분배하다, 배포하다 ② 살포하다, 퍼뜨리다"],["infamous","형용사","① 악명 높은 ② 수치스러운, 불명예스러운"],["strait","명사","① 해협 ② 궁핍, 곤경"],["redeem","타동사","① 상환하다 ② 만회하다 ③ 상쇄하다"],["vermin","명사","① 해를 입히는 야생 동물, 해충 ② 악당, 인간쓰레기"],["enthrall","타동사","① 마음을 빼앗다, 매혹시키다 ② 노예로 하다"],["accurate","형용사","정확한, 틀림없는; 정밀한"],["malady","명사","① 병, 질병 ② 병폐"],["sensuous","형용사","① 감각의, 감각적인 ② 관능적인, 육감적인"],["cramp","타동사","① 제한하다 ② 경련을 일으키다"],["surpass","타동사","~보다 낫다, 능가하다, 뛰어넘다"],["ulterior","형용사","나타나지 않은, 이면의, 숨은"],["negative","형용사","① 부정의 ② 거부하는; 비판적인 ③ 소극적인"],["levity","명사","경솔, 경박, 촐싹거림 경솔한 행위, 경거망동"],["convenient","형용사","편리한, 사용하기 좋은;형편 좋은"],["obstruct","동사","막다; 방해하다"],["bilingual","형용사","두 나라 말을 하는; 두 개 언어를 병용하는"],["terminate","동사","끝내다, 종결시키다"],["exiguous","형용사","근소한, 부족한, 빈약한"],["sordid","형용사","① 더러운, 지저분한 ② 비도덕적인, 추악한, 야비한"],["quarry","명사","① 채석장 ② 원천; 출처③ 사냥감"],["hardship","명사","고난, 고충, 곤란"],["effusive","형용사","심정을 토로하는, 감정이 넘쳐나는 듯한; 과장된"],["addict","타동사","빠지게 하다 명사] 중독자; 열광적인 지지자"],["vulgar","형용사","① 저속한, 속된, 천박한② 통속적인, 세속의; 일반의"],["dearth","명사","부족, 결핍"],["hitch","동사","① 편승하다 ②~을 묶다"],["tactics","명사","① 용병학, 전술, 병법 ② 작전; 책략, 방책"],["adjure","타동사","① 명하다, 요구하다 ② 간청하다, 탄원하다"],["phenomenon","명사","① 현상 ② 경이로운 사람"],["berserk","형용사","미쳐 날뛰는, 길길이 뛰는; 펄쩍펄쩍 뛰는"],["fathom","타동사","① 깊이를 재다 ② 알아내다, 간파하다"],["pastime","명사","기분 전환, 오락, 취미"],["tolerant","형용사","① 관대한, 아량 있는; 묵인하는② 내성이 있는"],["confront","타동사","① 직면하다 ② 대항하다 ③ 대조하다"],["armistice","명사","(일시적인) 휴전, 정전"],["disquiet","타동사","불안하게 하다, 걱정시키다"],["mutant","형용사","변화하고 있는; 돌연변이의, 돌연변이에 의한"],["impression","명사","① 인상 ② 영향, 효과③ 흉내④ 인물화"],["raven","동사","① 약탈하다 ② 찾아다니다 명사] 갈까마귀"]],"29":[["meticulous","형용사","꼼꼼한, 매우 세심한"],["preoccupation","명사","① 선취; 선점 ② 선입관, 편견 ③ 몰두"],["imprison","타동사","교도소에 넣다, 투옥하다, 가두다"],["specter","명사","① 유령, 망령, 귀신 ② 무서운 것, 공포의 원인"],["lengthen","동사","길게 하다, 늘이다; 길어지"],["renowned","형용사","유명한, 명성 있는"],["paroxysm","명사","격발; (주기적인) 발작적 활동"],["segregate","동사","차별하다; 떼어놓다"],["genteel","형용사","품위 있는, 고상한, 점잖은 체하는"],["resent","타동사","분개하다, 불쾌하게 여기다, 원망하다"],["en route","형용사","d. 도중에"],["statue","명사","상, 조상, 조각상"],["deadly","형용사","생명에 관계되는, 치명적인"],["assault","명사","폭행, 맹렬한 비난; 강간 타동사]폭행하다"],["perfidy","명사","불신, 배반"],["slang","명사","① 속어 ② 통용어; 은어"],["communicate","동사","① 전달하다 ② 의사소통하다 ③ 전도하다"],["dose","명사","1회분 복용량, 한 첩 동사] 투약하다, 복용시키다; 조제하다"],["misconstrue","타동사","잘못 해석하다, 오해하다"],["wizened","형용사","시든; 주름투성이의, 쭈글쭈글한"],["jeopardy","명사","위험; 위기"],["enduring","형용사","영속하는, 지속되는"],["occlude","동사","폐색하다; 막다; 방해하다"],["donate","타동사","기증하다; 주다"],["combination","명사","① 조합 ② 연합 ③ 숫자 배합"],["fertile","형용사","① 비옥한 ② 다산의③ 생식능력이 있는"],["beholden","형용사","은혜를 입은, 신세를 진"],["pronounce","동사","① 발음하다 ② 선언하다, 언명하다"],["marble","명사","① 대리석 ② 구슬; 구슬치기 ③ 분별; 지적 능력"],["actuate","타동사","① 움직이다 ② 자극하여 ~하게 하다"],["trace","동사","① 추적해서 밝혀내다 ② ~의 출처를 조사하다"],["cadaverous","형용사","① 시체의, 시체 같은② 창백한"],["inevitable","형용사","피할 수 없는, 필연적인"],["labyrinth","명사","미궁, 미로"],["bear","동사","① 참다 ② 떠맡다; 갖다 ③ 낳다"],["unassuming","형용사","젠체하지 않는, 겸손한, 주제넘지 않은"],["fasten","동사","① 묶다 ② 잠그다 ③ 고정시키다"],["valor","명사","용기, 용맹, 무용"],["outward","형용사","① 외부의 ② 외관의; 표면상의"],["tenor","명사","① 취지, 대의② 진로, 행로, 방침, 방향"],["adorn","타동사","꾸미다, 장식하다"],["sanctimonious","형용사","독실한 척 하는; 위선적인"],["hiccup","명사","① 딸꾹질② 일시적 하락; 약간의 문제"],["concede","동사","① 인정하다; 양보하다 ② 허용하다"],["brawl","명사","말다툼, 싸움, 소"],["entitle","타동사","① 제목을 붙이다, ~라고 칭하다 ② 자격을 주다"],["rapport","명사","① 관계 ② 교신"],["ashamed","형용사","부끄러운, 창피한, 수치스러운"],["infidel","형용사","신앙심 없는; 이단의 명사] 무신론자; 이교도"],["disclaim","동사","① 부인하다, 거부하다 ② 포기하다"]],"30":[["genetic","형용사","유전의, 유전학의"],["repercussion","명사","(보통 pl.) (사건·행동의 간접적인) 영향, 반향"],["secular","형용사","세속의, 현세의; 비종교적인"],["engross","타동사","(마음·주의 등을) 빼앗다, 몰두시키다"],["meritocracy","명사","실력주의; 실력 사회, 학력 사회; 지적 엘리트 계급"],["project","동사","① 계획하다 ② 발사하다 ③ 튀어나오다 명사] 예정"],["dissolute","형용사","방종한, 방탕한"],["harass","타동사","괴롭히다, 애먹이다"],["imperceptible","형용사","감지할 수 없는, 알 수 없는"],["tantrum","명사","언짢은 기분, 짜증, 불끈하기, 울화"],["shatter","동사","① 박살내다 ② 해치다; 꺾다 명사] ① 파편"],["penitent","형용사","참회하는, 뉘우치는"],["attain","동사","① (장소·위치·나이 등에) 이르다 ② 달성하다; 획득하다"],["organism","명사","① 유기체; 생물 ② (사회 등의) 유기적 조직체"],["deem","동사","(~으로) 생각하다, 여기다, 간주하다"],["scathing","형용사","냉혹한, 가차 없는, 신랄한"],["paradox","명사","역설, 패러독스; 역설적인 사람[상황]"],["concomitant","형용사","동반하는, 수반되는; 동시에 생기는 명사] 부산물"],["reliable","형용사","의지가 되는, 믿음직한; 확실한, 신뢰성 있는"],["slumber","명사","잠, 선잠"],["ballyhoo","명사","요란한[과대] 선전; 야단법석 동사] 요란스레[과대] 선전하다"],["plural","형용사","복수의; 두 개 이상의, 복수의"],["sag","동사","① 축 처지다 ② (시세·물가 등이) 떨어지다"],["novelty","명사","신기함, 새로움; 새로운 경험"],["apparatus","명사","① 장치, 기계, 기구 ② (몸의) 기관; (정치 조직의) 조직"],["transfer","동사","① 옮기다; 전임[전학, 전근]시키다② 양도하다③ 갈아타다"],["carnivore","명사","육식동물"],["emigrate","동사","이민을 가다, 이주하다"],["petty","형용사","① 보잘 것 없는, 사소한 ② 마음이 좁은, 쩨쩨한"],["upshot","명사","① (최종적인) 결말, 결과, 결론 ② 요지, 요점"],["imitate","타동사","모방하다, 흉내 내다"],["compulsive","형용사","① 강박적인, 상습적인 ② 강제적인"],["radius","명사","① 반지름, 반경 ② (활동 등의) 범위; 행동 범위[반경]"],["lift","동사","① 올리다 ② 철폐하다; 그만두다 ③ 돋우다"],["fetish","명사","① 맹목적인 숭배의 대상 ② (병적인) 집착, 고집"],["arrogant","형용사","거만한, 오만한, 건방진"],["wager","동사","① (돈을) 걸다 ② ~임이 틀림없다, 보증[장담]하다 명사] 내기, 노름"],["despair","명사","절망; 자포자기"],["garment","명사","(긴 웃옷·외투 등의) 의복; 옷, 의류"],["verify","타동사","입증하다; 확인하다"],["hauteur","명사","오만, 거만"],["disrupt","타동사","① 방해하다 ② (제도·국가 따위를) 붕괴시키다, 분쇄하다"],["indecision","명사","우유부단, 주저"],["fictitious","형용사","거짓의, 허구의, 가공의, 꾸민"],["bribe","명사","뇌물 동사] 뇌물을 주다, 매수하다"],["makeshift","형용사","임시변통의, 일시적인 명사] 임시변통 수단, 미봉책"],["accouter","타동사","장비하다, 갖추다, 착용시키다"],["sketchy","형용사","① 개략적인, 대강의 ② 불완전[불충분]한, 미완성의"],["torpid","형용사","① 무기력한, 활발하지 못한 ② 휴면[동면, 하면]하고 있는"],["correspondence","명사","① 일치 ② 상당함, 유사 ③ 통신, 서신 왕래; 편지"]],"31":[["undergo","","① (영향·검사 따위를) 받다, 입다; 겪다 ②견디다, 참다"],["ignominious","형용사","불명예스러운, 수치스러운, 창피한"],["solemn","형용사","엄숙한, 근엄한"],["manacle","명사","(보통 pl.) 수갑; 구속, 속박"],["deride","타동사","비웃다, 조소[조롱]하다"],["spawn","동사","① (알을) 낳다 ② 원인이 되다, 야기하다"],["antonym","명사","반의어"],["confirm","타동사","① 확실히 하다, 확증하다. ② ~이 유효함을 확인하다"],["penurious","형용사","① 몹시 인색한 ② 몹시 가난한, 빈곤한, 궁핍한"],["fabric","명사","① 직물; (직물의) 짜임새, 바탕 ② 구조; 조직, 구성"],["stout","형용사","① 뚱뚱한, 살찐 ② 튼튼한; 늠름한 ③ 용감한, 대담한"],["electorate","명사","[집합적] 선거민, (한 선거구의) 유권자"],["positive","형용사","① 확신하는, 자신 있는 ② 명확한 ③ 긍정적인; 적극적인"],["obedient","형용사","순종하는, 고분고분한, 말을 잘 듣는"],["humanity","명사","① 인류, 인간 ② 인간성; (pl.) 인간의 속성"],["bestow","타동사","주다, 수여하다[o명사], upo명사]]"],["mind-boggling","형용사","아주 놀라운, 믿기 어려울 만큼 놀라운"],["placate","타동사","달래다, 회유하다"],["theory","명사","① 학설, 이론 ② (개인적인) 의견[생각]"],["languid","형용사","① 나른한, 기운 없는② 열의 없는, 마음이 내키지 않는"],["aspect","명사","① 양상, 모습, 외관 ② 국면, 정세 ③ 견지, 견해"],["enlist","동사","① 입대하다, (징병에) 응하다 ②(협력·도움을) 얻다"],["wobble","동사","(불안정하게) 흔들리다[떨리다] 명사] 비틀거림, 흔들림, 동요"],["chest","명사","① 가슴, 흉곽; 폐 ② 큰 상자, 궤; 서랍장"],["reiterate","동사","t 반복하다, 되풀이하다"],["tremendous","형용사","① 엄청난, 거대한, 굉장히 많은 ② 굉장한, 대단한"],["district","명사","(행정구·선거구 등의) 지역, 지구; 지방"],["astound","타동사","크게 놀라게 하다, 아연실색케 하다"],["rebate","명사","① 환불 ② 할인"],["qualm","명사","① 불안한 마음, 주저함 ② 현기증, 아찔해짐"],["geology","명사","지질학; (어느 지역의) 지질"],["tackle","동사","달려들다, 달라붙다; ~와 맞붙다"],["conscience","명사","양심"],["advertisement","명사","광고; 광고 효과를 내는 것"],["endangered","형용사","멸종 위기에 이른"],["import","명사","① 수입, 수입품 ② 중요성 ③ 의미, 취지"],["annuity","명사","연금"],["contend","동사","① 다투다, 싸우다, 경쟁하다 ② 주장하다"],["variegated","형용사","① 잡색의, 얼룩덜룩한 ② 변화가 많은, 다양한"],["feud","명사","불화, 숙원(宿怨); 싸움, 반목"],["slippery","형용사","① 미끄러운, 미끈거리는, 반들반들한"],["reimburse","타동사","(빚 따위를) 갚다, 상환하다;"],["osteoporosis","명사","<의학> 골다공증"],["sedative","형용사","가라앉히는, 진정 작용이 있는 명사] 진정제; 진정시키는 것"],["abolish","타동사","(법률·제도 등을)폐지하다, 철폐하다"],["lousy","형용사","① 이가 들끓는 ② 불결한, 더러운"],["barrier","명사","① 울타리, 방벽, 관문 ② 장벽, 장애(물), 방해"],["patrician","명사","귀족, 문벌가"],["insignificant","형용사","무의미한, 하찮은, 사소한, 무가치한"],["dismantle","타동사","① 분해[해체]하다 ② 해체하다, 폐지하다"]],"32":[["absurd","형용사","① 불합리한, 터무니없는 ② 어리석은, 바보스런"],["ecstasy","명사","황홀경, 무아지경"],["slander","동사","명예를 훼손하다 명사] 중상, 비방"],["imposing","형용사","인상적인; 당당한, 위압적인"],["offset","동사","상쇄하다, 차감계산하다,벌충하다"],["relentless","형용사","① 냉혹한, 가차 없는, 잔인한 ② 끊임없는, 끈질긴"],["showdown","명사","① 최후의 대결, 결전 ② (계획·사실 등의) 폭로, 공표"],["microscope","명사","현미경"],["headstrong","형용사","완고한, 고집 센"],["affirm","동사","확언하다, 단언하다; 확인하다"],["comely","형용사","잘생긴, 어여쁜, 아름다운"],["restore","타동사","① 부활시키다, 복원하다, 수선하다 ② 회복시키다"],["paucity","명사","소량; 부족, 결핍"],["exempt","타동사","(의무·책임 등을) 면제하다 형용사] 면제된; 면세의; 면역의"],["incur","타동사","① 초래하다 ② (손해를) 입다, (빚을) 지다"],["solitary","형용사","① 혼자의; 외로운, 고독한 ② 유일한, 단 하나의"],["trafficking","명사","밀매, 불법거래"],["informal","형용사","① 비공식의, 약식의; 격식 차리지 않는 ② 구어체의"],["visage","명사","① (사람의) 얼굴 생김새, 용모 ② 외관, 양상, 모양"],["pith","명사","① 골자, 요점, 핵심 ②체력; 정력, 원기,힘, 필세"],["stammer","동사","말을 더듬다 명사] 말더듬기"],["neutral","형용사","① 중립인 ② 공평한 ③ 분명하지 않은; 애매모호한"],["entrench","동사","① 둘레에 참호를 파다 ② 자기의 입장을 굳히다"],["bucolic","형용사","목가적인, 전원생활의"],["deliberate","","\"형용사] ① 고의의, 의도적인 ② 신중한 동사] ① 숙고하다, 신중히 생각하다② 협의하다 \""],["garble","타동사","① 왜곡하다 ② 혼동하다, 착각하다"],["conservative","형용사","① 보수적인 ② (평가 등이) 줄잡은; 조심스러운"],["ward","명사","① 병동, 병실 ② 감방 동사] (위험·공격 등을) 막다"],["urge","동사","① 재촉하다, 추진하다 ② 강제하다; 설득하다"],["arsenal","명사","무기고; 무기공장; 비축; 창고"],["dependable","형용사","믿을 수 있는, 신뢰할 수 있는"],["chart","명사","① 해도, 수로도 ② 도표, 그림"],["plot","명사","① 계략, 음모, 책략 ② 줄거리, 각색, 구상 ③터, 대지"],["lateral","형용사","옆의, 측면의"],["distress","타동사","괴롭히다, 슬프게 하다 명사] 고뇌, 비탄, 걱정, 걱정거리"],["harangue","명사","대연설, 열변, 장광설 동사] 열변을 토하다"],["accomplish","타동사","이루다, 성취하다, 완성하다"],["taxing","형용사","아주 힘든, 부담이 큰"],["maneuver","동사","① 교묘하게 유도하다 ②군사 행동을 하게 하다"],["cannibalism","명사","① 동족끼리 서로 잡아먹음; 잔인 ② 중소기업의 흡수 합병"],["vicious","형용사","① 사악한, 악의 있는, 심술궂은 ② 잔인한, 포악한"],["spell","명사","① 한동안의 일, 계속되는 기간 ② 매력, 마력"],["bedizen","타동사","야하게[현란하게] 꾸미다[치장하다]"],["landscape","명사","풍경, 경치; 조망, 전망"],["amerce","타동사","① ~에게 벌금을 과하다 ② 벌하다"],["cluster","명사","① (과실·꽃 등의) 송이, 다발 ② 떼, 집단"],["flip-flop","명사","돌변, 급변 동사] 방향[태도, 결정]을 바꾸다"],["peremptory","형용사","① 단호한, 독단적인 ② 확정된, 최종적인, 결정적인"],["track","동사","뒤쫓다, 추적하다"],["remorse","명사","후회, 양심의 가책"]],"33":[["bewilder","동사","당황하게 하다, 어리둥절하게 하다"],["inclement","형용사","① (날씨가) 험악한, 거칠고 궂은 ② 냉혹한, 무자비한"],["martyr","명사","순교자, 희생자"],["earthly","형용사","① 지구의, 지상의 ② 이 세상의, 현세의, 속세의"],["shimmer","자동사","희미하게 반짝이다, 가물거리다"],["petition","명사","① 청원, 탄원 ② 청원서; (법정에의) 신청(서)"],["remiss","형용사","태만한, 소홀한, 부주의한"],["finagle","동사","속이다, 속임수를 쓰다, 속임수를 써서 얻다"],["sue","동사","소송을 제기하다, 고소하다"],["accessory","명사","① (보통 pl.) 부속물, 액세서리 ② <법> 종범, 방조자"],["jest","명사","① 농담, 익살 ② 놀림, 희롱, 장난"],["sought-after","형용사","필요로 하고 있는, 수요가 많은; 인기 있는"],["tease","동사","① 놀리다[장난하다], 괴롭히다 ② 귀찮게 조르다"],["phony","형용사","가짜의, 허위의"],["relate","동사","① 관련시키다 ② ~와 친척이다; ~와 이어져 있다"],["snug","형용사","① 포근한, 아늑한 ② 꼭 맞는"],["autism","명사","자폐증"],["crude","형용사","① 천연 그대로의, 가공하지 않은 ② 미숙한, 미완성인"],["newfangled","형용사","① 신형의, 신식의, 최신 유행의 ② 새것을 좋아하는"],["emblazon","타동사","(문장으로) 꾸미다, 장식하다"],["decree","명사","법령, 칙령"],["slovenly","형용사","① 추접스러운; 단정치 못한 ② (일 등이) 되는 대로의"],["gizmo","명사","간단한 장치"],["unintended","형용사","의도하지 않은, 고의가 아닌"],["angst","명사","불안, 걱정, 고뇌"],["preach","동사","① 전도하다, 설교하다 ② 타이르다, 훈계하다"],["tawdry","형용사","① 값싸고 번지르르한; 야한 ② 저속한, 지저분한"],["outrun","타동사","① ~보다 멀리달리다, 앞지르다 ② 초과하다"],["exception","명사","① 예외, 제외 ② 예외의 사람[물건], 이례"],["castigate","타동사","징계하다; 크게 책망하다, 혹평하다"],["hypocrisy","명사","위선; 위선(적인) 행위"],["condign","형용사","(형벌 등이) 당연한, 적절한, 타당한"],["lavish","형용사","① 마음이 후한, 아낌없는 ② 낭비적인, 사치스러운"],["dimension","명사","① 치수,용적, 부피; 크기 ②규모, 범위; 중요성"],["fair","형용사","① 공정한, 정당한 ② 살이 흰, 금발의"],["controversy","명사","논쟁, 논의, 논란"],["vainglorious","형용사","자만심[허영심]이 강한"],["identify","동사","① 확인하다; 감정하다② 동일시하다"],["compartment","명사","칸막이, (열차의) 칸막이 한 객실"],["address","타동사","① 연설하다② 말을 걸다 ③ 다루다, 처리하다"],["indelible","형용사","지울 수 없는, 씻어버릴 수 없는"],["bishop","명사","(가톨릭·그리스 정교의) 주교"],["meager","형용사","빈약한; 야윈; 불충분한"],["panegyric","명사","찬사, 칭찬의 말"],["degrade","동사","강등[좌천]시키다, 품위를 떨어뜨리다, 타락시키다"],["longevity","명사","장수, 수명; 장기근속"],["raze","타동사","(도시·집 등을) 파괴하다, 무너뜨리다"],["omnipotent","형용사","전능한, 무엇이든 할 수 있는"],["avert","타동사","① (눈·얼굴 등을) 돌리다 ② (타격·위험 등을) 피하다"],["torso","명사","① (인체의) 몸통 ② 토르소(머리·손발이 없는 나체 조상)"]],"34":[["well-to-do","형용사","부유한, 유복한"],["correspond","자동사","① 일치하다 ② ~에 해당하다 ③ 편지를 주고받다"],["perverse","형용사","① 비뚤어진 외고집의, 심술궂은② 정도를 벗어난"],["magnate","명사","(특히 재계의) 거물, 유력자, ~왕"],["spacious","형용사","널찍한, 넓은"],["alien","형용사","① 외국의② 이질적인 ③ 지구 밖의, 우주의, 외계의"],["deduce","타동사","추론[연역]하다"],["pier","명사","부두, 선창, 방파제"],["impecunious","형용사","돈이 없는, 무일푼의, 가난한"],["vogue","명사","유행, 인기"],["bespeak","타동사","① ~을 나타내다 ② 예약하다 ③ ~을 미리 의뢰하다"],["sortition","명사","제비뽑기, 추첨, 추첨분배"],["cognizant","형용사","인식하고 있는, 알고 있는"],["hegemony","명사","패권, 주도권 ="],["distinguished","형용사","① 눈에 띄는, 현저한 ② 우수한 ③ 유명한"],["rancor","명사","깊은 원한, 증오, 앙심"],["ooze","동사","① 스며나오다, 새어나오다 ② (비밀이) 새다, 누설하다"],["infectious","형용사","전염성이 있는; (영향이) 옮기 쉬운"],["filial","형용사","자식의, 자식으로서의; 효성스러운"],["bias","명사","① 선입견, 편견 ② 성향"],["germinate","동사","싹트다, 발아하다;(생각·감정 등이) 생겨나다"],["advisable","형용사","권할 만한, 바람직한, 현명한"],["retard","동사","① 속력을 늦추다; 지체시키다 ② (성장·발달 등을) 방해하다"],["kickback","명사","① 임금의 일부를 가로채기; 뇌물 ② 반환; 중개료"],["teem","자동사","많이 있다, 풍부하다"],["canine","형용사","개의, 개와 같은 명사] 갯과(科)의 동물"],["leftover","명사","① 나머지, 잔여 남은 음식 ② (과거의) 자취, 잔재, 유물"],["acclimate","동사","(사람·동식물 등을 새 풍토에) 순응시키다"],["repellent","형용사","혐오감을 주는, 불쾌한, 역겨운 명사] 구충제, 방수제"],["dictator","명사","① 독재자 ② 위압적인 사람, 실력자; 건방진 사람"],["shiver","동사","와들와들 떨다 명사] 몸서리; 떨림; 오한, 전율"],["outright","형용사","① 솔직한; 명백한 ② 완전한, 철저한 ③ 곧, 당장, 즉시"],["crisscross","동사","동분서주하다"],["anarchy","명사","무정부 상태; (사회적·정치적) 무질서, 혼란"],["extend","동사","① 뻗다, 내밀다 ② 연장하다, 늘리다; 늘어나다, 넓어지다"],["sanguinary","형용사","피비린내 나는; 잔인한, 살벌한"],["underlie","타동사","~의 근저에 있다, ~의 기초[기반]가 되다"],["function","명사","① (사람·사물의) 기능 ② 행사, 의식 ③<수학> 함수"],["penitentiary","명사","① 교도소, 감방 ② 고해 신부; 고해소"],["elated","형용사","의기양양한, 우쭐대는; 마냥 행복해 하는"],["impulse","명사","① 충동, 일시적인 감정 ② (외부에서 작용하는) 충격, 자극"],["throb","자동사","① 고동치다, 두근거리다 욱신욱신 쑤시다, 욱신거리다"],["starry-eyed","형용사","① 공상적인 ② 이상적인, 비현실적인"],["colony","명사","① 식민지 ② (같은 인종·동업자 등의) 집단, 부락"],["hardwired","형용사","하드웨어에 내장된; <비유적> 원래 갖추고 있는"],["appropriate","형용사","적합한, 적절한 타동사] ① 도용[전용]하다; 횡령하다"],["tenure","명사","① 재임 기간; 재임 ② 종신 재직권③ 거주권"],["paramount","형용사","최고의; 주요한"],["meet","동사","① 만나다, 맞닥뜨리다 ②채우다, 만족시키다"],["ensconce","타동사","① 숨기다, 감추다 ② 몸을 편히 앉히다, 안치하다"]],"35":[["fascinate","동사","매혹시키다, 황홀하게 하다"],["disgust","명사","혐오감, 싫증 타동사]혐오감을 불러일으키다, 정떨어지게 하다"],["indispensable","형용사","필수적인, 없어서는 안 되는"],["pathos","명사","연민의 정을 자아내는 힘, (예술 작품 따위의) 비애감"],["compute","동사","계산하다, 평가하다; 추정하다"],["watchword","명사","표어, 슬로건"],["sheer","형용사","① (크기․정도․양을 강조하여) 순전한 ② 섞이지 않은, 순수한"],["elapse","자동사","(시간이) 지나다, 경과하다 명사] (시간의) 경과"],["pirate","명사","① 해적; 해적선 ② 저작[특허]권 침해자, 표절자"],["nonpareil","형용사","비길 데 없는, 더할 나위 없는 명사] 최상급품, 일품"],["summary","명사","요약, 개요"],["maritime","형용사","바다의, 해양의"],["impair","타동사","손상시키다, (건강 등을) 해치다"],["amiable","형용사","상냥한, 호감을 주는, 붙임성 있는"],["sharpen","동사","① 예리하게 하다, 갈다 ② 더 강렬해지다"],["remuneration","명사","보수, 급료, 보상"],["deliver","동사","① 배달하다; 전하다 ② (연설·강연 등을) 하다"],["audible","형용사","들리는, 들을 수 있는"],["recede","자동사","① 물러나다 ② 몸을 빼다; 철회하다; 손을 떼다"],["somnolent","형용사","졸린, 졸리게 하는"],["bemoan","동사","① 한탄하다, 몹시 슬퍼하다 ② 유감으로 생각하다"],["pending","형용사","① 미정[미결]의, 계류 중인 ② 임박한, 절박한"],["swift","형용사","① 신속한, 빨리 움직이는, 쾌속의 ②즉석의"],["thrall","명사","노예; 노예의 신분[상태], 속박"],["altitude","명사","① (산·천체 등의) 높이, 고도; (해발) ② 고지"],["utterly","형용사","d.아주, 전혀, 완전히"],["victual","명사","(pl.) 음식, 양식 동사] 식량을 공급하다; 식량을 적재하다"],["pernicious","형용사","유해한, 유독한, 치명적인, 파멸적인"],["administer","동사","① 관리[운영]하다, 지배[통치]하다 ② 투약하다"],["laissez-faire","형용사","(자유) 방임주의의, 불간섭주의의"],["evolution","명사","① 전개; (사건 따위의) 발전 ② <생물>진화"],["saturate","타동사","① 흠뻑 적시다 ② 채우다, 포화시키다"],["metastasis","명사","① (암세포 등의) 전이 ② 변질, 변성, 변형"],["depreciate","동사","① 가치가 떨어지다, 평가절하하다 ② 경시하다"],["rash","형용사","경솔한, 무분별한, 성급한 명사] ① 발진뾰루지, 두드러기"],["credo","명사","신조"],["obscure","형용사","① 불명료한, 모호한 ② 세상에 알려지지 않은, 무명의"],["gale","명사","① 질풍, 강풍; 폭풍 ② (감정·웃음 등의) 폭발"],["bankruptcy","명사","파산(상태), 도산"],["hermetic","형용사","① 밀봉[밀폐]된 ② 난해한, 불가사의의"],["dodge","동사","① 홱 몸을 피하다, 날쌔게 비키다 ② 교묘히 피하다,속이다"],["calumniate","타동사","중상하다, 비방하다"],["thick","형용사","① 두꺼운, 두툼한 ② 진한, 걸쭉한 ③ 빽빽한, 우거진"],["fowl","명사","① 닭, 가금 ② 닭고기; 새고기"],["lessen","동사","작게[적게] 하다, 줄이다; 작아지다; 적어지다, 줄다"],["pageant","명사","① 야외극, 구경거리 ② (축제 등의) 화려한 행렬, 가장 행렬"],["common","형용사","① 공통의 ② 일반적인, 평범한③ 비속한, 상스러운"],["topography","명사","(한 지방의) 지세, 지형; 지형학"],["embroil","타동사","관련시키다, 끌려들게 하다,휩쓸어 넣다"],["inexhaustible","형용사","① 무진장한; 고갈될 줄 모르는 ② 끈기 있는"]],"36":[["circulate","동사","① 돌다; 순환시키다 ② 유포시키다; 배부하다; 유통시키다"],["unflagging","형용사","지칠 줄 모르는, 불요불굴의"],["denotation","명사","명시적 의미, 원뜻; 지시, 표시"],["navigate","동사","①항해하다, 항행)하다 ②조종[운전]하다"],["acoustic","형용사","청각의, 소리의; 음향학(상)의"],["skip","동사","① 가볍게 뛰다 ② 대충 훑어보다③ 생략하다"],["longitude","명사","경도(經度)"],["corrupt","형용사","① 부정한; 비도덕적인 ② 부패한, 썩은; 오염된"],["waterproof","형용사","방수의; 물이 새지 않는"],["skittish","형용사","① 겁이 많은 ② 변덕스러운, 급변하기 쉬운"],["implement","동사","t 이행[실행]하다 명사] 도구, 기구; 수단, 방법"],["errand","","①심부름 ② 용건, 볼일, 목적 ③ (특수한) 사명, 임무"],["dread","동사","(대단히) 두려워하다, 무서워하다; 염려[걱정]하다"],["sartorial","형용사","재봉사의, 양복장이의; 바느질의; 옷의, 의상의"],["flaw","명사","① (성격 등의) 결점, 흠, 결함 ② (사물의) 금, 균열, 흠"],["bent","명사","소질; 경향, 성향 형용사] ① 굽은 ② 열중하여"],["antipathy","명사","반감, 혐오"],["durable","형용사","내구성이 있는, 오래 가는, 튼튼한"],["infinite","형용사","무한한, 무수한; 막대한, 끝없는"],["hurl","동사","① 집어던지다, 세게 던지다 ② (욕설 등을) 퍼붓다"],["collapse","동사","① 붕괴되다, 무너지다 ②쓰러지다, 졸도하다"],["geography","명사","지리, 지세, 지형; 지리학"],["advocate","타동사","옹호[지지]하다; 주장하다 명사] ① 지지자 ② 변호사"],["inverse","형용사","역(逆)의, 반대의 명사] 역, 정반대"],["perplex","동사","① 당혹스럽게 하다, 난감하게 하다② 시끄럽게 하다"],["opposite","형용사","① 맞은편의 ② 정반대의, 서로 용납하지 않는"],["versatile","형용사","① 다재다능한 ② 다용도의, 다목적의"],["caliber","명사","① (원통의) 직경, 지름 ② 능력, 역량, 재간 ③ 우수성, 품질"],["employ","타동사","① (사람을) 쓰다, 고용하다 ② 쓰다, 이용하다"],["shortsighted","형용사","① 근시의 ② 근시안적인, 선견지명이 없는"],["procession","명사","행진, 행렬; (행렬의) 진행, 전진"],["mediocre","형용사","보통의, 평범한; 썩 좋지는 않은"],["hazy","형용사","① 흐릿한, 아련한, 안개가 낀 ② 흐릿한, 확신이 없는"],["trance","명사","① 꿈결; 무아지경, 황홀 ② 실신, 최면 상태"],["liberate","타동사","자유롭게 하다; 해방[석방]하다"],["apostle","명사","① 사도(예수의 12제자의 한 사람) ② 주창자, 선구자"],["recumbent","형용사","기댄, 누워 있는, 드러누운"],["sentiment","명사","① (고상한) 감정, 정서, 정감 ② 소감, 감상, 생각"],["peel","동사","① 껍질을 벗기다; 벗겨지다 ② 허물을 벗다"],["majority","명사","① 대다수; 과반수 ② 다수당 ③ 득표차"],["ferocious","형용사","① 사나운, 흉포한, 잔인한 ② 심한, 모진, 맹렬한"],["abuse","타동사","① (지위·특권·재능 등을) 남용하다 ② 학대하다 ③ 욕하다"],["centennial","명사","100주년 (기념제), 100년 기념일"],["obstetrician","명사","산과의, 산부인과 의사"],["replace","동사","① 대신하다, 대체하다, 바꾸다 ② 제자리에 놓다"],["blithe","형용사","① 쾌활한, 명랑한, 즐거운 ② 경솔한, 부주의한"],["red tape","명사","관료적 형식주의, 형식주의적인 절차, 공무원식"],["palatial","형용사","대궐 같은, 으리으리한"],["screen","동사","① 선발하다, 심사하다 ② 가리다, 보호하다"],["toll","명사","① 희생, 대가; 사망자[희생자] 수 ② 통행세, 통행료"]],"37":[["valid","형용사","(근거가) 확실한, 타당한; 유효한"],["amass","동사","모으다, 축적하다"],["emblem","명사","상징, 표상; 기장, 문장"],["coin","동사","① (화폐를) 주조하다 ② (신어·새로운 표현을) 만들어 내다"],["sentinel","명사","보초; 감시"],["impervious","형용사","① ~에 영향을 받지 않는 무감각한; 둔감한 ② 불침투성의"],["timber","명사","재목, 목재"],["relieve","동사","① 안심시키다 ② ) 해방하다 ③ 구원하다; 구제하다"],["eponymous","형용사","이름의 시조가 되는; (시대 등이) 시조의 이름을 딴;"],["superb","형용사","훌륭한; (경치·건물 등이) 당당한, 장려한, 화려한"],["woo","동사","① 구애하다, 구혼하다 ② 얻으려고 노력하다"],["pessimistic","형용사","비관적인, 염세적인"],["encapsulate","동사","(사실·정보 따위를) 요약하다"],["refrigerate","동사","냉각하다; 서늘하게 하다; 냉장[냉동]하다"],["caprice","명사","변덕, (태도·행동의) 갑작스러운 변화"],["halcyon","형용사","① 평온한, 평화로운 ② 화려한, 번영하는"],["blackmail","타동사","협박하다, 공갈치다; 강요하다 명사] 갈취한 금품"],["premier","명사","수상; 국무총리 형용사] ① 첫째의, 수위의 ② 최초의"],["atheist","명사","무신론자"],["derive","동사","① 끌어내다; 손에 넣다, 획득하다 ② ~에서 파생하다"],["ramification","명사","① (파생한) 결과, 파급효과 ② 지맥, 지류"],["undue","형용사","지나친, 과도한, 심한"],["bombshell","명사","① 폭탄, 포탄 ② 폭탄선언, 몹시 충격적인 일[소식]"],["disconsolate","형용사","① (사람이) 우울한, 슬픈, 절망적인 ② 음침한, 불쾌한"],["legible","형용사","읽기 쉬운, 판독할 수 있는"],["fancy","명사","① 공상, 추측 ② 변덕 ③ 좋아함, 애호, 연모; 취미"],["actually","형용사","d.① 사실은, 실제로는 ② 정말로, 참으로"],["clamor","명사","소란, 시끄러움; (불평·항의·요구 따위의) 외침, 소동"],["indifferent","형용사","무관심한, 냉담한"],["pertain","자동사","① 속하다, 부속하다 ② 관계하다 ③ 적합하다, 어울리다"],["sticky","형용사","① 달라붙는, 점착성이 있는 ② 무더운, 습기가 많은"],["jockey","동사","① (말에) 기수로서 타다 ② 운전[조종, 조작]하다"],["vengeance","명사","복수, 원수 갚기, 앙갚음"],["applicable","형용사","① 적용[응용]할 수 있는 ② 적절한, 해당되는"],["downfall","명사","① 추락; 전복; 몰락; 몰락의 원인 ② (비·눈 등이) 쏟아짐"],["spangle","동사","금속 조각으로 장식하다, (보석 따위를) 박아 넣다"],["moody","형용사","① 변덕스러운 ② 기분이 언짢은, 침울한, 뚱한"],["garland","명사","화환 타동사]화환[화관]을 씌우다, 화환으로 장식하다"],["confident","형용사","① 확신하는 ② 자신감 있는, 자신 있는"],["obtuse","형용사","① 둔한, 무딘, 끝이 뭉툭한; 둔각의 ② 우둔한"],["stretch","","①뻗어 있다 ②법률·진실 등을) 왜곡하다, 과장하다"],["malingerer","명사","꾀병을 부리는 사람"],["inborn","형용사","타고난, 천부적인"],["paranoia","명사","편집증; 피해망상"],["cosset","타동사","애지중지하다, 응석받이로 기르다"],["forefather","명사","조상, 선조"],["tailor-made","형용사","(목적·요구 등에) 맞춘, 안성맞춤의"],["agenda","명사","의제, 안건, 예정표, 의사일정"],["lame","형용사","① 절름발이의, 불구의 ② 불충분한, 설득력이 없는"],["draft","명사","① 도안, 설계도 ② 초고 ③ 징병 ④ 통풍. 통풍장치"]],"38":[["ambiguous","형용사","애매한, 두 가지 (이상의) 해석이 가능한"],["embed","타동사","① 끼워 넣다 ② (마음․기억 등에) 깊이 새겨 두다"],["regal","형용사","① 국왕의, 제왕의 ② 당당한, 위엄 있는"],["impersonation","명사","① 인격화, 의인화 ② 성대모사"],["spark","동사","촉발시키다, 유발하다 명사] 불꽃, 불똥"],["parsimonious","형용사","(극도로) 검약하는, 매우 인색한"],["heredity","명사","유전, 세습, 유전적 형질; 전통"],["becoming","형용사","① (옷 등이) 어울리는 ② 알맞은, 적당한"],["claim","동사","① 요구[청구]하다 ② 주장하다 ③ (인명을) 빼앗다"],["uneven","형용사","① 울퉁불퉁한 ② 균일치 않은 ③ 공정하지 않은"],["delude","타동사","속이다, 착각하게 하다"],["perseverance","명사","인내(력), 참을성, 버팀, 끈기"],["singular","형용사","① 유일한, 단독의 ② 기묘한, 야릇한 ③ 비범한"],["autobiography","명사","자서전"],["veteran","명사","① 베테랑, 전문가 ② 고참병, 노병 형용사] 노련한"],["hamper","타동사","방해하다, 훼방하다"],["tame","형용사","① 길들여진, 사람을 따르는 ② 유순한, 시키는 대로 하는"],["pompous","형용사","① 거만한, 건방진 ② 과장된 ③ 호화로운, 성대한"],["oligarchy","명사","과두정치, 소수 독재정치"],["rational","형용사","이성적인, 합리적인"],["bombard","타동사","① 폭격하다 ② (질문·탄원 등을) 퍼붓다, 쏟아 붓다"],["candidate","명사","① (직위 등에 대한)지원자; 수험생 ② (~이) 될 만한 사람"],["fiscal","형용사","국고의; 재정의, 회계의"],["mutter","동사","중얼거리다; 투덜거리다 명사] 중얼거림; 불평"],["alchemy","명사","① 연금술 ② 마력, 비법"],["remain","타동사","① 남다 ② 체류하다 ③ 여전히 ~이다"],["sciolism","명사","어설픈[천박한] 학문[지식], 수박 겉핥기식"],["quash","동사","① 진정시키다, 진압하다 ② 무효로 하다, 폐기하다"],["vile","형용사","① 비열한, 천한 ② 극도로 불쾌한[나쁜], 지독한"],["enslave","타동사","노예로 만들다, 예속시키다"],["discerning","형용사","안목이 있는, 통찰력[식별력]이 있는"],["savor","명사","맛, 풍미 동사] 맛이 나다; 맛보다, 음미하다, 즐기다"],["deter","타동사","① 단념시키다, (공포·의혹 등으로) 제지하다 ② 막다"],["workout","명사","운동; 연습; 연습 시합"],["extent","명사","① 정도, 범위, 한계, 한도 ② 넓이, 크기, 길이"],["concur","자동사","① 동의하다, (의견이) 일치하다 ② 동시에 일어나다"],["comprehend","타동사","① 이해하다, 파악하다, 깨닫다 ② 내포하다, 포함하다"],["tenet","명사","주의, 교리, 신조"],["gauche","형용사","솜씨가 서투른, 세련되지 못한"],["shaggy","형용사","털투성이의, 덥수룩한"],["discord","명사","① 불화, 불일치 ② 내분, 알력"],["ache","자동사","① 아프다, 쑤시다 ② (~하고 싶어) 못 견디다; 갈망하다"],["leak","동사","① (액체·기체가) 새다; 새게 하다 ② 누설하다"],["manifold","형용사","여러 가지의, 다양한;"],["chamber","명사","① 방 ② (입법·사법 기관의) 회의장; 입법[사법]부"],["induce","동사","① 설득하여 ~하게 하다 ② 야기하다, 유발하다"],["parole","명사","가석방, 가석방 기간 / 동사] 가석방하다"],["feline","형용사","① 고양이의, 고양잇과의; 고양이 같은 ② 교활한, 음험한"],["captive","명사","포로, 사로잡힌 사람; 사랑에 빠진 사람 형용사] 사로잡힌"],["semantic","형용사","(언어·기호의) 의미의; 의미론의"]],"39":[["encompass","타동사","① 둘러싸다 ② 포함하다, (많은 것을) 아우르다"],["unique","형용사","① 유일(무이)한② (~의 점에서) 유례없는"],["philistine","명사","속물; (미술․문학․음악 등을 모르는) 교양 없는 사람"],["season","동사","① 양념하다, 간을 맞추다 ② 적응시키다, 길들이다"],["dubious","형용사","의심스러운, 모호한"],["reorganize","동사","재편성[재조직]하다, 개조하다, 개혁하다"],["significance","명사","① 의의, 의미, 취지 ② 중요성, 중대성; 의미심장함"],["populous","형용사","① 인구밀도가 높은 ② 사람으로 붐비는, 번화한"],["avoidance","명사","① 기피, 회피, 도피 ② <법> 취소, 무효; 무효화"],["reckless","형용사","무분별한, 무모한"],["coexist","자동사","같은 때[장소]에 존재하다, 공존하다"],["neurosis","명사","신경증, 강한 공포[걱정], 노이로제"],["behold","동사","(바라)보다, 지켜보다, 주시하다"],["accustomed","형용사","익숙한; 습관이 된[to]"],["wanton","형용사","① (행위가) 방자한 ② 고의적인 ③ 바람기 있는, 음탕한"],["intimate","형용사","① 친밀한 ② 사적인, 은밀한 ③ 정통한, 조예가 깊은"],["effervescent","형용사","①거품이 이는, 발포하는 ② 흥분한;쾌활한,기운이 넘치는"],["budget","명사","① 예산; 예산안 ② 경비, 운영비, 생활비"],["glib","형용사","입심 좋은, 유창한"],["desert","명사","사막 동사] ① 버리다, 유기하다 ② 탈영하다"],["chisel","동사","① 새기다, 새겨서 만들다 ② 속이다, 속여서 빼앗다"],["layoff","명사","일시 해고, 감원"],["obfuscate","타동사","① 어둡게 하다, 흐리게 하다 ② 당혹하게 하다"],["conceit","명사","자만(심), 자부심 동사] <재귀용법> 우쭐대다, 자만하다"],["averse","형용사","싫어하는, 반대하는"],["bachelor","명사","① 미혼 남자 ② 학사 학위 소지자, 대학 졸업자"],["high-profile","형용사","① 세간의 이목을 끄는 ② 고자세의, 잘난 체하는"],["vagary","명사","① 별난 생각; 변덕 ② 예측할 수 없는 변화"],["obtrusive","형용사","① 눈에 띄는 ② 강요하는, 주제넘게 참견하는"],["parade","명사","① 행렬, 시위행진; 열병식 ② 과시, 자랑"],["arbiter","명사","① 중재인, 조정자 ② 결정권자"],["thwart","타동사","방해하다, 훼방 놓다; 좌절시키다"],["faucet","명사","꼭지, 주둥이, 물꼭지"],["comply","자동사","따르다, 준수하다"],["loom","동사","① 어렴풋이 보이다 ② 곧 닥칠 것처럼 보이다"],["saturnine","형용사","① 침울한, 무뚝뚝한, 음침한 ② 납의; 납중독의"],["eruption","명사","① 폭발, 분화; 분출 ②폭발; 돌발"],["inalienable","형용사","양도할 수 없는, 빼앗을 수 없는"],["merchandise","명사","상품, 제품; 재고품"],["fitful","형용사","발작적인; 단속적인, 일정하지 않은, 변덕스러운"],["delete","타동사","삭제하다, 지우다"],["stock","명사","저장; 재고; 가축; 주식; 줄기 동사] 들여놓다, 사들이다"],["imponderable","형용사","① 무게가 없는, 극히 가벼운 ② 헤아릴 수 없는"],["prestige","명사","위신, 명성, 신망, 세력"],["rehabilitate","타동사","① 사회에 복귀시키다 ② 복구하다 ③ 복직시키다"],["traitor","명사","배반자, 반역자"],["adopt","타동사","① 채용하다, 채택하다 ② 양자[양녀]로 삼다"],["matrimonial","형용사","결혼의; 부부간의"],["slump","명사","① 급감, 급락, 폭락 ② 쇠퇴, 부진, 슬럼프 ③ 불황"],["canard","명사","허위보도, 헛소문, 유언비어"]],"40":[["uncouth","형용사","(사람·행동 등이) 꼴불견의, 무례한, 거친"],["define","동사","① 정의하다 ② 규정하다 ③ ~의 경계를 정하다"],["pedestal","명사","① 주춧대, 대좌 ② 근저, 기초"],["salacious","형용사","외설적인, 음란한, 호색의"],["restrain","타동사","① 억누르다, 억제하다 ② 제한하다; 저지하다"],["ingrained","형용사","깊이 스며든, 뿌리 깊은; 상습적인"],["critical","형용사","① 비평의, 평론의 ② 비판적인, 혹평적인"],["reparation","명사","① 보상, 배상 ② 배상금"],["postpone","타동사","연기하다, 늦추다"],["maxim","명사","① 격언, 금언 ② 처세법, 원칙"],["ajar","형용사","형용사]d.(문이) 조금 열린[열리어]"],["element","명사","① 요소, 성분; 분자 ② 원소 ③ 자연력; 악천후, 비바람"],["launch","동사","① 진수시키다; 발사하다 ② 착수하다, 시작하다 ③ 가하다"],["obituary","명사","(신문에 실리는) 사망기사"],["afford","타동사","① ~할 여유가 있다, ~을 살 돈이 있다 ② 주다, 제공하다"],["fickle","형용사","변덕스러운, 변하기 쉬운, 마음이 잘 변하는"],["vibrate","동사","진동하다, 흔들리다, 떨다"],["bigamy","명사","중혼, 이중 결혼; 중혼죄"],["dated","형용사","① 날짜가 있는 ② 케케묵은, 시대에 뒤진, 구식의"],["ascribe","동사","t (결과 등을)~에 돌리다; ~의 탓으로 삼다"],["literate","형용사","읽고 쓸 수 있는; 학식 있는"],["calligraphy","명사","서도, 서예; 필적; 달필, 명필"],["theatrical","형용사","① 연극의 ② 연극조의, 연극 같은, 과장된"],["hit-or-miss","형용사","되는 대로의, 소홀히 하는, 부주의한"],["counterpart","명사","① 한쪽; 대응 관계에 있는 사람 ② 서로 비슷한 사람"],["ductile","형용사","① (금속이) 잡아 늘이기 쉬운, 연성이 있는 ② 유순한"],["enhance","타동사","(가치·능력·매력 따위를) 높이다, 향상시키다"],["genesis","명사","① 기원, 발생 ② 창세기"],["sentence","타동사","판결을 내리다 명사] ① 문장, 글 ② 판결, 선고"],["pandemic","명사","전국[세계]적인 유행병 형용사] 전국적으로 유행하는"],["comb","타동사","① 빗질하다, 빗다 ② 구석구석 뒤지다, 면밀히 수색하다"],["barbarian","명사","야만인, 미개인 / 형용사] 미개의, 야만스러운"],["expiate","타동사","속죄하다, 보상하다"],["antipodes","명사","① 대척지 ② 정반대의 것"],["weave","동사","① 짜다, 엮다; 짜서 만들다 ② 만들어 내다, 엮어내다"],["sour","형용사","① 신, 시큼한 ② 기분이 언짢은, 뚱한; 심술궂은"],["zephyr","명사","산들바람, 미풍"],["harbor","동사","① 숨겨 주다 ② 마음속에 품다 ③ 거처가 되다"],["absolute","형용사","① 절대적인, 완전무결한 ② 전제적인, 독재적인"],["stride","명사","① 큰 걸음, 활보; 한 걸음 ② 진전, 진보, 발전"],["vest","동사","① ) 주다, 수여하다 ② 옷을 입히다"],["faint","형용사","① 희미한 ② 약한 ③실신할 것 같은, 어지러운"],["choir","명사","합창단, 성가대"],["discriminate","동사","① 식별하다 ② 차별대우하다"],["intermediate","형용사","중급의, 중간의 명사] 중간물; 중개자; 중간고사"],["proportion","명사","① 비(比), 비율 ② 조화, 균형 ③ (전체의) 부분"],["minuscule","형용사","① 아주 작은 ② 하잘 것 없는 ③소문자의, 소문자로 쓰인"],["ratify","동사","비준하다"],["threshold","명사","① 문지방, 문턱; 입구 ② 발단, 시발점 ③ 경계"],["scream","동사","소리치다, 날카로운 비명을 지르다 명사] 외침, 절규, 비명"]],"41":[["kidnap","타동사","납치하다, 유괴하다"],["defiant","형용사","도전적인, 반항적인"],["menial","형용사","천한, 비천한 명사] 하인, 머슴"],["subscribe","동사","① 구독하다;가입하다 ② 기부하다 ③ 동의하다"],["acumen","명사","총명함, 날카로운 통찰력"],["endeavor","동사","노력하다, 애쓰다, 시도하다"],["somnambulism","명사","잠결에 걸어 다님, 몽유, 몽유병"],["official","형용사","공무상의, 공식적인 명사] 공무원, 관공리 임원; 심판"],["impound","타동사","① 압수하다, 몰수하다 ② 가두다, 수용하다"],["character","명사","① 특성, 특질, 성질 ② 인격, 성격, 품성 ③ 사람"],["workaday","형용사","평범한, 보통의, 일상적인"],["luggage","명사","휴대품; 소형 여행 가방, 수화물"],["ply","동사","① 정기적으로 왕복하다 ② 바쁘게 움직이다"],["incisive","형용사","날카로운, 통렬한, 신랄한"],["microbe","명사","미생물, 세균; 병원균"],["bravery","명사","① 용기, 늠름함 ② 훌륭함, 화려함; 아름다운 옷"],["cynical","형용사","냉소적인, 비꼬는"],["playwright","명사","극작가, 각본가; 각색자"],["abreast","형용사","d.나란히, 바로 옆에"],["calling","명사","① 소명; 직업, 천직 ② 소집, 소환"],["refined","형용사","① 세련된, 고상한, 품위 있는 ② 정련한, 정제한"],["sabotage","명사","사보타주[태업], 파괴[방해] 행위"],["fawning","형용사","알랑거리는, 아첨하는"],["disqualify","타동사","자격을 박탈하다, 적임이 아니라고 판정하다"],["umbrage","명사","① 분하게 여김, 불쾌, 분개 ② 그늘; 무성한 나뭇잎"],["terror","명사","① 공포, 두려움, 무서움 ② 테러"],["cement","동사","굳히다, 다지다"],["despise","동사","경멸하다, 멸시하다, 얕보다"],["lanky","형용사","비쩍 마른, 피골이 상접한, 마르고 호리호리한"],["impact","명사","① 충돌; 충격 ② 영향, 영향력, 효과"],["beckon","동사","① 손짓으로 부르다 ② 유인하다"],["foundation","명사","① 창설, 건설 ② 기초, 토대; 근거 ③ 재단, 협회"],["pertinent","형용사","적절한, 타당한; 관련 있는"],["arrant","형용사","순전한, 완전한, 터무니없는; 악명 높은"],["omit","타동사","① 빼다, 생략하다 ② 게을리 하다; ~하기를 잊다"],["tardy","형용사","느린, 더딘; 늦은; 완만한"],["entomology","명사","곤충학"],["recant","동사","철회[취소]하다"],["pertinacious","형용사","끈질긴, 완고한"],["compose","동사","① 구성하다 ② 작문하다; 작곡하다 ③ 마음을 가라앉히다"],["serendipity","명사","우연히 발견하는 능력, 행운"],["rag","명사","① 넝마; 걸레 ② 천한 사람, 누더기 옷을 입은 사람"],["martial","형용사","전쟁의, 군사의; 용감한; 군인다운"],["garret","명사","다락방"],["vouch","동사","보증하다, 단언하다"],["patrimony","명사","세습재산"],["amazing","형용사","놀라운, 굉장한 ="],["scrub","동사","① 씻다; 세게 문지르다 ② 없애다; 취소하다"],["homicide","명사","① 살인, 살인죄 ② 살인자, 살인범"],["excuse","동사","① 용서하다, 너그러이 봐주다 ② 변명하다; 변명이 되다"]],"42":[["compensate","동사","보상하다, 보충하다, 벌충하다; 상쇄하다"],["sanity","명사","① 제정신, 온전한 정신 ② 합리적인 행동"],["impenetrable","형용사","① 꿰뚫을 수 없는, 관통할 수 없는 ② 헤아릴 수 없는"],["eugenics","명사","우생학"],["pivotal","형용사","중추의, 중요한"],["ancestor","명사","조상, 선조"],["detract","동사","① 딴 데로 돌리다 ② 줄이다, 손상하다"],["raw","형용사","① 날것의, 익히지 않은 ② 가공하지 않은 ③ 미숙한"],["jocose","형용사","익살맞은, 웃기는, 우스꽝스러운"],["penance","명사","참회, 속죄, 회개"],["retire","동사","① 은퇴하다, 퇴직하다; 퇴직시키다 ② 퇴각하다"],["meek","형용사","유순한, 온순한"],["occupation","명사","① 직업, 업무; 일 ② 점유; 점령, 점령기간"],["interject","타동사","불쑥 끼워 넣다, 말참견하다"],["mainstream","명사","본류; 주류, 대세 형용사] 주류의"],["pine","동사","① 수척해지다, 한탄하며 지내다 ② 연모하다"],["solitude","명사","① 고독, 독거 ② 쓸쓸한 곳, 벽지, 황야"],["narcotic","명사","① 마취제, 마약; 진통제, 수면제 ② 마약 중독자"],["acquire","타동사","획득[취득]하다, 습득하다"],["condolence","명사","애도, 조의"],["perceive","타동사","① 지각하다; ~을 눈치채다, 인식하다 ② 이해하다"],["feckless","형용사","무기력한, 무능한; 무책임한"],["spire","명사","① 첨탑, 뾰족탑 ② 절정 ③ 소용돌이, 나선"],["undermine","타동사","(명성·건강 등을) 약화시키다, 해치다"],["hapless","형용사","불운한, 불행한"],["passion","명사","① 열정, 격정; 열심, 열중 ② 폭발; 울화, 격노 ③ 정욕"],["exorcise","타동사","쫓아내다, 몰아내다; 몰아내다"],["tolerance","명사","① 관용, 용인, 아량 ② 참음, 인내, 인내력 ③ 내성"],["dexterous","형용사","솜씨 좋은, 손재주가 있는"],["endow","동사","① ~에게 주다, 부여하다 ② 기금을 기부하다"],["belabor","타동사","① 세게 치다 ② (말로) 공격하다 ③ 장황하게 논하다"],["hypothesis","명사","가설; 추측, 가정"],["viper","명사","① 독사 ② 악의 있는사람, 음흉한 사람"],["campaign","명사","① 캠페인, 운동 ② 선거 운동, 유세 ③ 군사 행동"],["allegedly","형용사","d.주장한[전해진] 바에 의하면, 이른바"],["shutdown","명사","일시 휴업, 조업 중지; 폐점, 폐쇄"],["fierce","형용사","① 흉포한, 몹시 사나운 ② 사나운 ③ 맹렬한, 격심한"],["gentry","명사","신사계급, 상류층"],["bold","형용사","① 과감한, 대담한 ② 뻔뻔스러운, 버릇없는"],["lade","동사","① 싣다, 적재하다 ② 지우다, 괴롭히다"],["decade","명사","① 10년간 ② 10을 단위로 하는 한 그룹"],["coarse","형용사","① 조잡한, 조악한, 열등한 ② 야비한, 상스러운"],["application","명사","① 적용, 응용 ② 신청, 지원; 신청서"],["militant","형용사","공격[호전]적인, 전투적인"],["recrimination","명사","비난, 맞고소"],["valedictory","형용사","고별의, 작별의 ,.졸업생 대표의 고별 연설"],["conserve","타동사","보존하다, 보호하다"],["seminal","형용사","① 중대한, 감화를 주는 ② 생식의, 정액의"],["inroad","명사","① 침입, 침략 ② 침해, 잠식;진출, 진입, 침투"],["taut","형용사","(밧줄 따위가) 팽팽한; (표정·신경 등이) 긴장된"]],"43":[["lethal","형용사","치명적인, 치사의"],["safeguard","명사","보호수단; 안전장치"],["enlighten","타동사","계몽하다, 교화하다; 가르치다, 이해시키다"],["parturition","명사","분만, 출산"],["urban","형용사","도시의, 도시 특유의, 도시에 익숙한; 도시에 사는"],["ballot","명사","투표용지; 비밀투표; 동사] (무기명으로) 투표하다"],["absorb","타동사","① 흡수하다, 빨아들이다 ② 열중케 하다; 빼앗다"],["closet","명사","① 찬장, 벽장 ②) 작은 방, 사실 ③ 변기, 수세식 화장실"],["perpetual","형용사","영속적인; 부단한, 끊임없는"],["top-notch","형용사","최고의, 일류의, 아주 뛰어난 명사] 최고점, 최고도"],["interpret","동사","① 설명하다, 해명하다 ② 해석하다 ③ 통역하다"],["enmity","명사","증오, 적의, 적개심, 원한"],["disband","동사","해체하다"],["conscious","형용사","① 의식하고 있는, 알고 있는 ② 의도적인"],["naturalize","동사","① 귀화시키다, ~에게 시민권을 주다 ② 적응시키다"],["desperate","형용사","① 자포자기한 ② 필사적인, 극단적인"],["garnish","타동사","① 장식하다; 미사여구로 꾸미다 ② 고명을 곁들이다"],["stand","동사","① 서다, 서 있다; 일어서다 ② 유효하다 ③ 참다"],["muddy","형용사","① 진흙의; 질퍽거리는 ② 흐린 ③ 멍한, 혼란한"],["cast","동사","① ~에게 표를 던지다 ② ~에 대해 의심을 불러일으키다"],["adamant","형용사","요지부동의, 단호한, 강경한"],["glee","명사","큰 기쁨, 즐거움, 환희"],["process","명사","① 진행, 경과② 과정; 공정, 순서, 처리, 방법"],["sleek","형용사","①매끄러운, 윤기 있는 ② 단정한, 말쑥한, 맵시낸"],["dyslexia","명사","> 난독증 , 독서 장애"],["convert","동사","① 전환시키다, 전환하다 ② 개종시키다, 개종하다"],["quay","명사","선창, 부두, 방파제"],["unite","동사","결합하다, 연합하다; 통합시키다"],["incognito","형용사","형용사]d.익명의, 신분을 숨긴"],["recession","명사","① 후퇴, 퇴거 ②경기 후퇴, 불경기"],["malign","타동사","중상하다, 헐뜯다 형용사] 해로운;악성의; 악의 있는"],["shore","타동사","지주로 받치다, 떠받치다, 강화하다 명사] 바닷가, 해안"],["vista","명사","경치, 풍경; 전망"],["objective","형용사","객관적인, 편견 없는 명사] 목표, 목적"],["accord","동사","① 일치[조화]하다 ② 주다, 수여하다, 부여하다"],["constable","명사","순경, 경찰관"],["exchange","동사","① 교환하다, 맞바꾸다, 주고받다 ② 환전하다"],["onset","명사","① 개시, 시작; 발병 공격, 습격"],["rake","동사","① 갈퀴로 긁다; 긁어모으다 ② 샅샅이 찾다"],["homogeneous","형용사","동종[동질, 균질]의 , 상동의"],["pinnacle","명사","① 정점, 절정 ② 작은 뾰족탑, 뾰족한 산봉우리"],["feign","동사","가장하다, ~인 체하다"],["impregnable","형용사","난공불락의, 견고한; (신념 따위가) 확고부동한"],["medium","명사","① 매개물, 매체; (정보 전달 등의) 기관, 수단 ② 영매"],["servile","형용사","노예의; 노예근성의, 비굴한, 굽실거리는"],["loophole","명사","① 작은 창문; 구멍, 틈 ② 빠져나갈 구멍, 허점"],["bland","형용사","① 온화한; 상냥한 ② 자극적이지 않은 ③ 지루한"],["tyro","명사","초보자, 초심자"],["penny-pinching","형용사","① 인색한, 구두쇠인 ② 긴축 재정의"],["assemble","동사","① 모으다, 집합시키다, 소집하다; 회합하다 ② 조립하다"]],"44":[["wary","형용사","경계하는, 조심하는, 신중한"],["impeach","타동사","탄핵하다; 고발하다"],["recluse","명사","은둔자 형용사] 속세를 떠난, 은둔하는; 쓸쓸한"],["sever","동사","절단하다, 끊다; 떼다, 가르다"],["privy","형용사","① 내밀히 관여하는, 내통하고 있는 ② 사적인"],["chagrin","명사","원통함, 분함, 유감"],["aggrieve","타동사","괴롭히다, 학대하다;침해하다; 손상시키다"],["parley","명사","회담, 상의, 교섭, 협상 동사] 회담하다, 교섭하다"],["morose","형용사","기분이 언짢은, 시무룩한, 뚱한"],["establish","타동사","① 수립하다, (창설하다 ② 제정하다; 확립하다"],["beneficiary","명사","수혜자; 수령인"],["complaisant","형용사","사근사근한, 고분고분한; 공손한, 친절한"],["semester","명사","한 학기, 반 학년"],["nettle","",".① 쐐기풀 ② 초조하게 하는 것, 어려움"],["alternative","명사","대안, 대체 수단 형용사] 양자택일의, 대안적인, 대체의"],["optimal","형용사","최선의, 최상의, 최적의"],["amusement","명사","① 즐거움, 위안, 재미 ② 오락, 놀이"],["sieve","명사","① 체 ② 입이 가벼운 사람, 비밀을 못 지키는 사람"],["petulant","형용사","성마른, 화를 잘 내는"],["bend","동사","① 구부리다, 숙이다; 굽히다 ② 굴복시키다; 굴복하다"],["egoism","명사","이기주의"],["tiresome","형용사","성가신, 귀찮은, 지루한"],["forswear","동사","① 맹세코 그만두다 ② 맹세코 부인하다"],["spectacular","형용사","구경거리의, 장관의; 극적인, 화려한"],["conceive","동사","① 상상하다, 마음에 품다; 고안하다 ② 임신하다"],["harbinger","명사","선구자; 전조, 조짐"],["mar","타동사","손상하다, 망쳐놓다, 못쓰게 만들다"],["debate","동사","① 논의하다, 토론하다, 논쟁하다 ② 숙고하다"],["incursion","명사","(돌연한) 침입, 습격"],["gratitude","명사","감사, 보은의 마음; 사의(謝儀)"],["vaunt","동사","자랑하다, 뽐내다, 허풍떨다"],["merit","명사","① 우수함, 가치; 장점 ② 공적, 공로, 훈공"],["dense","형용사","① 빽빽한; 조밀한, 밀도가 높은 ② 아둔한, 어리석은"],["autodidact","명사","독습자, 독학자"],["lenient","형용사","관대한, 인정 많은"],["uterus","명사","자궁"],["elusive","형용사","① 파악하기 어려운, 알기 어려운 ② 교묘하게 피하는"],["quibble","명사","① 핑계, 구차스런 변명, 둘러대기 ② 트집"],["facility","명사","① 쉬움, 용이함 ② 시설, 설비 ③ 재능, 솜씨, 유창함"],["desist","자동사","그만두다, 중지하다, 단념하다"],["conglomeration","명사","덩어리, 혼합[집합]물, 복합(체)"],["retrench","동사","① (비용·경비를) 줄이다, 절감하다 ② 해고하다"],["initial","형용사","① 처음의, 최초의, 초기의 ② 어두에 있는"],["harry","동사","① 괴롭히다, 못살게 굴다 ② 약탈하다"],["civilian","명사","① 일반인, 민간인 ② 비전투원, 군속"],["breeze","명사","① 산들바람, 미풍 ② 말다툼, 분쟁; 쉽게 할 수 있는"],["placid","형용사","① 평온한, 조용한 ② (사람‧동물이) 침착한, 차분한"],["transport","타동사","① 수송하다 ② 황홀하게 하다 ③ 추방하다"],["sallow","형용사","창백한, 혈색이 나쁜"],["reconnaissance","명사","정찰; 조사, 검사; 답사; 정찰대"]],"45":[["grateful","형용사","① 감사하고 있는, 고마워하는 ② 기분 좋은, 쾌적한"],["rage","명사","① 분노, 격노; 사나움, 맹위 ② 일시적 대유행"],["neglect","타동사","① 게을리 하다, 해야 할 것을 하지 않다 ② 무시하다"],["soggy","형용사","① 흠뻑 젖은 ② 기운 없는, 맥이 빠진"],["pariah","명사","따돌림을 받는 사람, 추방자, 부랑자, 천민"],["even-handed","형용사","공평한, 공정한, 편파적이지 않은"],["torrent","명사","① 급류, 여울 ② 억수 ③ 연발; 분출"],["access","명사","접근, 면접, 출입; 접근하는 방법; 통로"],["confine","타동사","① 제한하다, 한정하다 ② 가두다, 감금하다"],["lush","형용사","푸르게 우거진, 무성한, 풍부한"],["elicit","타동사","끌어내다, 유도해내다"],["warden","명사","①관리인, 감독자, 감시자 ② 교도소장"],["slash","동사","①깊이 베다, 깊은 상처를 입히다 ② 대폭 삭감하다"],["uncanny","형용사","신비로운, 불가사의한, 초인적인, 초자연적인"],["impute","타동사","~에게 돌리다, ~의 탓으로 하다"],["din","명사","소음"],["mock","동사","① 조롱하다, 비웃다 ② 흉내내다, 모방하다"],["superlative","형용사","① 최고의, 더할 나위 없는 ② 최상급의 ③ 과장된"],["expensive","형용사","값비싼, 사치스러운, 비용이 많이 드는"],["tint","명사","① 엷은 빛깔, 색조 ② 성질; 기미"],["adverse","형용사","① 부정적인, 불리한, 불운한 ② 역의, 거스르는, 반대의"],["gestation","명사","① 임신 ② 구상"],["visible","형용사","① 보이는, 알아볼 수 있는 ② 명백한, 뚜렷한"],["dwindle","동사","(점점) 작아지다, 줄어들다"],["coroner","명사","검시관"],["innocuous","형용사","① 무해한, 독이 없는 ②악의 없는, 거슬리지 않는"],["transform","동사","① 변형시키다 ② 바꾸다"],["auction","명사","경매, 공매 / 타동사]경매로 팔다"],["fissure","명사","갈라진 곳, 틈, 금, 균열; 불일치, 분열"],["breakthrough","명사","① 돌파구 ② 획기적인 약진"],["perpetrate","동사","t 저지르다, 자행하다"],["opus","명사","작품음악 작품 번호"],["haunt","동사","① 늘 붙어 따라다니다 ② 출몰하다 ③ 자주 들르다"],["indomitable","형용사","굴하지 않는, 불굴의, 꿋꿋한"],["maim","타동사","불구로 만들다; ~을 쓸모없게 만들다, 망쳐놓다"],["larva","명사","애벌레, 유충"],["derail","동사","① 탈선시키다 ② 틀어지게 하다"],["premeditated","형용사","미리 계획된, 계획적인"],["ruin","동사","①파괴하다; 파멸시키다; 못쓰게 하다 ② 망쳐놓다"],["misogamy","명사","결혼 혐오, 결혼을 싫어함"],["pamper","동사","t 지나치게 소중히 하다; 버릇없이 키우다"],["fit","형용사","① 알맞은, 어울리는 ② 적격의, 적임의 ③ 튼튼한"],["asteroid","명사","소행성"],["sanction","명사","① 인가, 찬성 ②보통, 제재(조치)"],["practicable","형용사","실행 가능한; 실용적인"],["berate","타동사","호되게 꾸짖다, 질책하다"],["restless","형용사","침착하지 못한, 가만히 있지 않는, 불안한"],["compassion","명사","동정, 불쌍히 여김, 연민"],["sepulchral","형용사","① 무덤의; 매장의; 무덤 같은 ② 음산한; 음침한"],["ensure","타동사","① 안전하게 하다, 지키다 ② 확실하게 하다, 확보하다"]],"46":[["universal","형용사","① 우주의; 전 세계의, 만국의"],["solace","동사","위로하다 / 명사] 위안, 위로"],["entourage","명사","① 주위 사람들, 측근자, 수행원 ② 주위, 환경"],["incredible","형용사","믿을 수 없는, 믿기 힘든; 엄청난"],["magnet","명사","① 자석, 자철 ② 사람 마음을 끄는 사람"],["deceive","동사","속이다, 기만하다, 사기 치다"],["bully","동사","괴롭히다, 들볶다; 위협하다"],["posterity","명사","자손, 후대"],["dismay","타동사","당황하게 하다; 실망[낙담]시키다"],["collateral","형용사","부수적인, 이차적인 .담보물"],["ration","명사","① 일정한 배급량, 할당량, 정량 ② 식량, 양식"],["incantation","명사","주문, 주문을 외우기; 마술, 마법"],["attract","타동사","① 끌다,끌어당기다 ② ~의 마음을 끌다, 매혹하다"],["recidivism","명사","상습적 범행[비행]; 상습성"],["paltry","형용사","① (금액이) 얼마 안 되는 ② 시시한, 하찮은"],["quandary","명사","곤경, 궁지, 진퇴양난"],["contain","타동사","① ~이 들어 있다, 포함하다 ② 억누르다, 억제하다"],["osseous","형용사","뼈의, 뼈로 이루어진, 골질의"],["hatred","명사","미움, 증오, 원한; 혐오"],["invoke","타동사","① 기원하다; 예로서 인용하다 ② 호소하다; 청하다"],["leech","명사","① 거머리 ② 남의 고혈을 빨아먹는 자; 고리대금업자"],["delicate","형용사","① 미세한, 미묘한 ② 허약한, 연약한"],["bovine","형용사","① 소(牛)의, 소 같은 ② 둔한, 느릿느릿한"],["temptation","명사","유혹; 유혹하는[유혹적인] 것"],["negligent","형용사","태만한, 소홀한; 부주의한"],["pestilence","명사","① 전염병, 역병; 선페스트 ② 해악"],["adhere","자동사","① 들러붙다, 부착하다 ② 고수하다, 집착하다"],["gridlock","명사","① 교통 정체 ② 꼼짝달싹 못하는 상태, 교착 상태"],["vast","형용사","광대한, 거대한, 방대한"],["monologue","명사","① 독백 형식의 작품; 독백 ②긴 이야기, 장광설"],["empower","타동사","권한을 부여하다, ~할 수 있게 하다"],["chorus","명사","① 합창; 합창곡; 합창단 ② 후렴"],["astray","형용사","d.형용사] 정도에서 벗어나; 못된 길에 빠져"],["exaggerate","동사","과장하다, 침소봉대하다; 지나치게 강조하다"],["hectic","형용사","① 야단법석의; 열광적인 ② 소모성의; 폐결핵의"],["obsession","명사","강박관념, 집착"],["platonic","형용사","정신적 사랑의; 이상적인"],["defeat","타동사","① 패배시키다, 물리치다, 이기다 ② 좌절시키다"],["minute","형용사","① 미세한 ② 상세한, 자세한, 정밀한"],["shift","동사","① 옮기다, 이동하다 ② 바꾸다"],["leverage","명사","① 영향력 ② 지레의 작용"],["recusant","형용사","복종하지 않는, 반항적인"],["swamp","동사","① 물에 잠기게 하다; 늪에 처박다 ② 홍수처럼 밀려오다"],["frequent","형용사","자주 일어나는, 빈번한"],["scourge","명사","하늘의 응징; 징벌, 재앙; 골칫거리"],["alms","명사","구호금[품], 의연금, 자선 기부금"],["perish","동사","① 죽다; 멸망하다 ② 사라지다, 썩어서 없어지다"],["toxic","형용사","유독한, 독성의"],["conduct","명사","① 행위, 품행, 행실 ② 경영, 수행, 처리"],["spill","동사","① 엎지르다, 흘리다 ② 떨어뜨리다, 내동댕이치다"]],"47":[["manifest","형용사","명백한, 분명한"],["seal","명사","① 직인, 도장; 봉인 ② 바다표범, 물개"],["chaos","명사","혼돈, 무질서, 대혼란"],["edit","타동사","편집하다;교정하다; 편집 발행하다"],["platitude","명사","평범함, 진부함; 진부한 이야기, 흔해빠진 말"],["jocund","형용사","명랑한, 쾌활한, 즐거운, 유쾌한"],["smack","명사","① 맛, 향기 ② 낌새 ③ 찰싹 때리기; 찰싹 때리는 소리"],["influence","명사","① 영향, 결과; 영향력② 영향을 미치는 사람"],["paranoid","형용사","편집[망상]성의; 편집증 환자의; 과대 망상적인"],["board","명사","① 널, 판자; 판지, 마분지 ② 위원회 l ③ 식사"],["scoundrel","명사","악당, 깡패, 불한당"],["excommunication","명사","파문, 파문 선고; 제명, 추방"],["imperial","형용사","① 제국; 황제의 ② 지위 높은; 위엄 있는, 당당한"],["penetrate","동사","① 꿰뚫다, 침입하다 ② ~을 통과하다, 지나가다"],["integral","형용사","① 필수적인, 필요불가결한 ② 완전한, 완전체의"],["diagnosis","명사","진단; 분석, 판단"],["wraith","명사","생령, 망령, 유령"],["underscore","타동사","강조하다, 분명히 나타내다, 밑줄을 긋다"],["laureate","명사","① 명예를 얻은 사람, 월계관을 쓴 사람 ② 계관 시인"],["awkward","형용사","서투른, 어색한"],["diameter","명사","① 직경, 지름 ② 배율"],["produce","명사","① 농산물 ② 생산물, 제품"],["recondite","형용사","심오한, 난해한, 알기 어려운"],["decomposition","명사","분해; 해체; 부패"],["caress","명사","애무, 애정 표시"],["enthusiasm","명사","열광; 열정, 의욕, 열의"],["mimic","명사","흉내쟁이, 흉내를 잘 내는 사람"],["genus","명사","종류, 부류"],["abort","동사","① 유산시키다; 유산하다 ② 중단시키다"],["tone","명사","① 어조, 말투 ② 음조, 음색 ③ 색조"],["verbose","형용사","말이 많은, 장황한"],["solicit","동사","간청하다, 구하다, 졸라대다"],["vis-à-vis","명사","마주보고 있는 사람; 동등한 지위의 사람"],["frustration","명사","좌절, 차질, 실패; 욕구 불만, 좌절감"],["levy","동사","(세금 따위를) 징수하다, 부과하다; 징집하다"],["organ","명사","① (생물의)기관, 장기 ② (정치적인) 기관"],["falter","동사","① 비틀거리다 ② 말을 더듬다 ③ 주저하다"],["antagonist","명사","적대자, 적수, 경쟁 상대"],["horrendous","형용사","무서운, 끔찍한, 무시무시한"],["portal","명사","정문, 현관, 입구; 발단, 시초"],["embroider","동사","① ~에 자수를 놓다; 수놓다 ② 꾸미다, 윤색하다"],["contrast.","명사","① 대조, 대비 차이 ② 대조적인 것"],["peevish","형용사","성마른, 안달하는; 투정부리는, 언짢은"],["bicker","자동사","말다툼하다, 언쟁하다"],["incident","명사","사건; 분쟁 일어나기 쉬운, 흔히 있는"],["aviation","명사","① 비행, 항공; 비행술, 항공학 ② 항공기; 군용기"],["considerable","형용사","① 상당한, 많은 ② 중요한, 무시할 수 없는, 주목할 만한"],["molecule","명사","① 분자 ② 지극히 작은 것, 미량"],["rotate","동사","① 회전하다 ② 순환하다; 교대하다, 교대 근무하다"],["tarry","자동사","지체하다, 꾸물거리다"]],"48":[["obstinate","형용사","완고한, 고집 센"],["celebrity","명사","명성; 유명인사, 명사"],["defuse","타동사","① 진정시키다 ② 신관을 제거하다"],["misery","명사","비참함; 불행; 빈곤; 고통 ="],["rant","동사","폭언하다, 호통치다; 호언장담하다, 고함치다"],["perspicuous","형용사","명료한, 명쾌한"],["extinct","형용사","① 멸종한, 사멸한 ② 폐지된 ③ 끊어진; 꺼진; 활동을 그친"],["tramp","동사","① 쿵쿵거리며 걷다; 짓밟다 ② 터벅터벅 걷다"],["devaluation","명사","평가 절하; 가치[신분]의 저하"],["bane","명사","독, 해악; 재해; 파멸"],["acclaim","동사","갈채하다, 환호하여 맞이하다"],["hamlet","명사","작은 마을, 부락, 촌락"],["constant","형용사","① 변치 않는, 일정한 ② 끊임없는, 부단한"],["wrap","동사","① 싸다, 감싸다, 포장하다 ② 둘러싸다, 감다"],["impediment","명사","① 방해, 장애 ② 신체장애, 언어 장애"],["version","명사","① 특정한 형, 변형, 각색, 별형 ② 설명, 의견, 견해"],["patent","형용사","① 특허의; 특허권을 가진 ② 명백한, 뚜렷한, 빤한"],["align","동사","① 정렬시키다 ② 제휴시키다, 같은 태도를 취하게 하다"],["craftsman","명사","장인; 공예가, 숙련공, 명장, 예술가"],["lewd","형용사","음란한, 외설적인"],["disturb","동사","① 방해하다; ~에게 폐를 끼치다 ② 불안하게 하다"],["bid","명사","① 입찰, 매긴 값, 입찰의 기회 ② 노력, 시도"],["sneer","명사","냉소; 비웃음, 경멸"],["kinetic","형용사","운동의, 운동에 의해 생기는; 동역학의"],["complement","타동사","보충하다"],["asylum","명사","① 보호 시설, 수용소; 정신병원 ② 피난, 망명, 보호"],["retail","동사","① 소매하다; 소매되다 ② 퍼뜨리다, 그대로 옮기다"],["point-blank","형용사","단도직입적인, 솔직한, 노골적인"],["stature","명사","① 키, 신장 ② 지명도, 위상"],["halt","동사","멈추다, 멈춰서다, 정지하다; 중단시키다"],["complication","명사","① 복잡; 복잡화 ② 분규, 혼란, 말썽거리 ③ 합병증"],["supposedly","형용사","d.추정상, 아마, 필경"],["fallow","형용사","경작하지 않은, 미개간의"],["recess","명사","① 휴식; 휴회; 휴가; 휴식 시간 ② 은거지; 벽감"],["proctor","명사","① 시험 감독관 ② 대리인, 사무 변호사"],["intensive","형용사","① 강한, 격렬한; 집중적인, 철저한 ② 집약적인"],["obsolescence","명사","노후화, 진부화, 구식화; 쇠퇴, 퇴화"],["understate","타동사","적게 말하다, 삼가서 말하다; 줄잡아 말하다"],["reign","명사","① 치세, 통치 기간 ② 통치, 지배; 통치권, 세력, 권세"],["gratuity","명사","선물; 팁"],["plain","형용사","① 명백한, 분명한; 평이한, 쉬운 ② 솔직한 ③ 평범한"],["inexplicable","형용사","불가해한, 설명할 수 없는"],["masquerade","명사","가면무도회; 거짓 꾸밈, 허구, 은폐"],["reluctant","형용사","꺼리는, 마음 내키지 않는, 마지못해 하는"],["physiology","명사","생리학; 생리 기능, 생리 현상"],["senile","형용사","노인의, 노년의, 노쇠한; 노망한"],["furor","명사","① 벅찬 감격, 열광 ② 분노, 격노 ③ 대소동, 난동"],["entail","타동사","(필연적 결과로서) 일으키다, 남기다, 수반하다"],["towering","형용사","① 몹시 높은, 솟아 있는 ② 비범한, 출중한"],["arsenic","명사","비소"]],"49":[["sedentary","형용사","주로 앉아서 하는, 몸을 많이 움직이지 않는"],["congregate","동사","모이다, 모으다 / 형용사] 모인, 집합한"],["meteorology","명사","기상학, 기상상태"],["reflect","동사","① 반사하다, 되튀기다 ② 반영하다, 나타내다"],["illegitimate","형용사","불법의, 위법의; 서출의 명사] 사생아, 서자"],["dilute","동사","① 묽게 하다, 희석하다 ② 약화시키다"],["unflinching","형용사","움츠리지 않는, 굽히지 않는, 굴하지 않는"],["eternity","명사","① 영원, 영겁 ② 내세, 저승"],["succor","명사","구조, 원조; 구조자"],["corrosive","형용사","부식하는, 부식성의; 신랄한"],["vanish","동사","사라지다, 없어지다, 자취를 감추다"],["pejorative","형용사","경멸적인, 비난하는 의미의"],["sneak","동사","① 살금살금 가다; 몰래 가져가다 ② 고자질하다"],["ontology","명사","존재론"],["reputation","명사","① 평판, 세평 ② 명성, 신망, 호평"],["eject","동사","① 몰아내다, 쫓아내다 ② 뿜어내다, 배출하다"],["neighborhood","명사","① 근처, 이웃, 인근 ② 지구, 지역 ③ 이웃 사람들"],["truculent","형용사","① 반항적인, 공격적인, 잔인한 ② 신랄한, 통렬한"],["companion","명사","동료, 상대, 친구, 동반자"],["blush","동사","얼굴을 붉히다, 부끄러워하다"],["available","형용사","이용할 수 있는; 입수할 수 있는"],["polymath","명사","박식가, 박식한 사람"],["stagnation","명사","침체, 정체; 부진; 불황, 불경기"],["queasy","형용사","① 욕지기나는, 메스꺼운, 구역질나는 ② 불안한"],["hatch","동사","① 까다, 부화하다 ② 꾸미다, 꾀하다"],["confederation","명사","연합, 연맹, 동맹; 연방, 동맹국"],["entice","타동사","유혹하다, 유인하다, 꾀다"],["gem","명사","① 보석 ② 귀중품; 보석과 같은 것"],["landmark","명사","① 현저한 사건 ② 주요지형물, 랜드마크"],["renounce","동사","① 포기하다, 단념하다 ② ~와의 관계를 끊다"],["pack","명사","① 꾸러미, 보따리 ② 한 떼; 일당, 한 패"],["malevolent","형용사","악의 있는, 심술궂은"],["puzzling","형용사","당황하게 하는, 어리둥절케 하는"],["rack","명사","① 선반, 걸이 ② 고문대, 고통, 고민"],["fetus","명사","태아"],["blend","동사","① 섞다 ,혼합하다 ② 한데 어우러지다, 조화하다"],["intercourse","명사","① 성교 ② 교제, 교섭, 교류; 통상"],["demolish","타동사","파괴하다, 부수다, 폭파하다"],["oblique","형용사","① 비스듬한, 기울어진 ② 완곡한, 에두른, 간접적인"],["deception","명사","속임, 기만, 사기; 속임수"],["leaven","타동사","① 발효시키다, 부풀리다 ② 서서히 변화를 주다"],["rookie","명사","① 신병; 풋내기, 초심자 ② 신인 선수"],["appoint","동사","① 지명하다, 임명하다 ② 정하다, 지정하다"],["toil","동사","① 힘써 일하다 ② 애써 나아가다"],["fake","형용사","위조의, 모조의, 가짜의"],["incarcerate","타동사","투옥하다"],["basin","명사","물동이, 수반, 대야; 분지; (강의) 유역"],["politic","형용사","① 현명한, 신중한 ②정책적인; 교활한"],["section","명사","① 절단, 분할; 자른 면 ② 단면, 대표적인 면"],["clash","명사","① 충돌, 격돌 ② 충돌, 불일치; 부조화"]],"50":[["immune","형용사","① 면역의, 면제된 ② 영향을 받지 않는"],["sparse","형용사","드문드문한, 희박한; 적은"],["waive","타동사","① 포기하다 ②연기하다"],["distraction","명사","① 정신이 흐트러짐; 주의 산만 ② 기분전환, 오락"],["peripatetic","형용사","①걸어 돌아다니는, 순회하는 ② 소요 학파의"],["reckon","동사","① 세다, 계산하다 ② 간주하다, 판단하다, 평가하다"],["mean","형용사","① 비열한; 심술궂은 ② 보통의, 평균의"],["perforate","동사","구멍을 내다, 관통하다"],["redundant","형용사","① 여분의, 과다한 ② 장황한; 중복되는"],["chatterbox","명사","수다쟁이"],["ponder","동사","숙고하다, 깊이 생각하다"],["uniform","형용사","한결같은, 균일한, 획일적인"],["eclogue","명사","목가, 전원시, 목가시"],["rotten","형용사","① 썩은, 더러운; 악취를 풍기는 ② 부패한, 타락한"],["appall","타동사","오싹 놀라게 하다, 서늘케 하다"],["scar","명사","① 상처 자국, 흉터 ② 상처"],["naught","명사","① 제로, 영 ② 무, 존재하지 않음, 무가치"],["haggle","자동사","실랑이를 하다, 흥정을 하다; 논쟁하다"],["agony","명사","극도의 고통, 괴로움"],["booty","명사","① 노획물, 전리품; 약탈품 ② 상품, 상금"],["discard","동사","버리다, 폐기하다"],["graphic","형용사","① 그려 놓은 듯한, 사실적인 ② 그림의; 도표로 표시된"],["convince","타동사","납득시키다, 설득하다, ~에게 깨닫게 하다"],["optician","명사","안경사, 안경점"],["ardent","형용사","열렬한, 열광적인"],["enervate","타동사","기력[힘]을 빼앗다[약화시키다]"],["masterpiece","명사","걸작, 대표작, 명작"],["vent","명사","① 구멍② 배출구,(감정 따위의) 발로, 표출"],["optional","형용사","임의의, 선택의"],["filter","동사","① 거르다, 여과하다 ② 서서히 알려지다"],["concord","명사","(의견․태도 등의) 일치; 화합, 조화"],["incubate","동사","① 품다, 부화하다 ② 배양하다"],["hieroglyph","명사","상형문자, 그림문자"],["prop","명사","① 지주, 버팀목, 버팀대 ② 지지자, 후원자"],["trail","명사","① 자국, 발자국; 실마리 ② 오솔길, 시골길"],["commend","타동사","① 칭찬하다 ② 추천하다, 권하다 ③ 맡기다, 위탁하다"],["innumerable","형용사","셀 수 없는, 무수한, 대단히 많은"],["relax","동사","① 늦추다; 편하게 하다 ② 관대하게 하다, 경감하다"],["libel","타동사","명예를 훼손하다, 비방하다"],["shambles","명사","① 도살장 ② 유혈의 장, 아수라장"],["faculty","명사","① 능력, 재능 ② (대학의) 학부 ③ (학부의) 교수단"],["air","동사","① 발표하다, 자랑해 보이다 ② 방송하다"],["paragon","명사","모범, 본보기, 전형, 귀감"],["due","형용사","① 마땅히 지불되어야 할, 만기의 ② 도착 예정인"],["temerity","명사","무모, 만용"],["current","형용사","① 지금의, 현재의 ② 현행의, 통용되는"],["rapscallion","명사","악한, 무뢰한; 건달"],["befit","타동사","~에 적합하다, ~에 걸맞다, 어울리다"],["stubby","형용사","① 그루터기 같은; 그루터기가 많은 ② 짧고 굵은"],["planet","명사","① 행성 지구 ② 선각자, 지도자"]],"51":[["queer","형용사","① 이상한, 기묘한, ② 수상한, 의심스러운"],["extirpate","타동사","근절시키다, 일소하다; 뿌리째 뽑다"],["rustic","형용사","① 시골의; 시골풍의, 전원생활의 ② 단순한, 소박한"],["soothe","동사","① 달래다, 위로하다 ②덜다, 완화하다"],["palaver","명사","① 교섭, 상담 ② 장시간의 토론; 잡담, 수다"],["mute","형용사","무언의, 벙어리의 동사] 소리를 죽이다"],["spout","동사","① (액체 등을) 내뿜다, 분출하다; 뿜어져 나오다"],["circumference","명사","원주, 둘레"],["devote","타동사","① 바치다 ② 일신을 바치다, 전념하다"],["understudy","타동사","대역 연습을 하다; 대역을 하다"],["allot","타동사","할당하다, 분배하다"],["topsy-turvy","형용사","d. 거꾸로; 역으로, 반대로; 뒤죽박죽; 혼란되어"],["disdain","타동사","경멸하다, 멸시하다"],["latent","형용사","잠재되어 있는, 숨어 있는"],["compromise","동사","① 타협하다 ② 손상하다, 더럽히다"],["intelligence","명사","① 지성; 이해력, ② 정보. 첩보"],["wiseacre","명사","아는 체하는 사람, 현명한 체하는 사람"],["embody","타동사","① 구체화하다, 유형화하다 ② 구현하다, 실현하다"],["attachment","명사","① 애착, 애정 ② 부착; 부착물"],["install","타동사","① 설치하다, 가설하다 ② 취임시키다, 임명하다"],["territory","명사","① 영토, 영역 ② 땅; 지역, 지방"],["contrary","형용사","반대의, ~에 반하는, ~와 서로 용납하지 않는"],["brew","동사","① 양조하다 ② 끓이다 ③ (음모 등) 꾸미다"],["plight","명사","곤경, 궁지, 역경"],["onerous","형용사","성가신, 귀찮은, 부담스러운"],["craft","타동사","정교하게 만들다, 공들여 만들다"],["accommodation","명사","① 숙박시설,공공시설 ② 적응, 적합; 조절,"],["genial","형용사","① 친절한, 다정한 ② 온화한, 기분 좋은"],["fare","명사","① (교통) 요금 ② 식사, 음식"],["pointed","형용사","뾰족한; (말 등이) 날카로운, 신랄한"],["reptile","명사","① 파충류, 파충류의 동물 ② 비열한 인간"],["banner","명사","① 기, 기, 군기 ② (광고용) 현수막"],["anonymous","형용사","익명의, 작자 불명의"],["regenerate","동사","갱생시키다, 새사람이 되게 하다; 재건하다"],["leprosy","명사","① 나병, 문둥병, 한센병 ② 도덕적 부패, 타락"],["prosecute","동사","① 기소하다, 소추(訴追)하다 ② 추진하다; 해내다"],["censor","타동사","검열하다, 검열하여 삭제하다"],["mature","형용사","① )잘 익은, 숙성한 ② 성인이 된 ③ 사려 깊은"],["indefatigable","형용사","지칠 줄 모르는, 끈기 있는"],["swing","동사","① 흔들리다, 흔들다 ② 휘두르다 ③ 돌리다, 바꾸다"],["vice","명사","① 악덕, 악, 사악, 부도덕 ② 결함, 결점"],["obverse","명사","① 표면 ② 이면; 상대되는 것"],["resist","동사","① 저항하다 ② 견디다, 저항하다 ③ 이겨내다"],["polygraph","명사","거짓말탐지기"],["humid","형용사","습기 찬, 눅눅한, 축축한"],["funeral","명사","① 장례식, 장례 ② 장례 행렬"],["permissive","형용사","많은 것을 허용하는, 관대한, 자유방임적인"],["stuff","동사","① ~에 채우다, 채워 넣다 ② 배불리 먹게 하다"],["rampart","명사","성벽, 방벽"],["dwell","자동사","① 살다, 거주하다 ② 존재하다, 남아 있다"]],"52":[["thrive","자동사","① 번영하다, 번창하다 ② 잘 자라다, 무성하다"],["bitter","형용사","① 쓴; 쓰라린 ② 혹독한, 매서운 ③ 냉소적인, 비꼬는"],["sear","동사","① 태우다, 그슬리다 ② 시들다, 마르다"],["perk","명사","임직원의 특전; 임시 수입"],["sole","형용사","① 유일한, 단 하나의 ② 독점적인"],["rebut","동사","논박하다"],["profession","명사","① 직업 ② 공언, 언명, 고백, 선언"],["entrenched","형용사","(권리·습관·생각 따위가) 확립된, 굳어버린"],["incentive","형용사","자극적인, 격려적인"],["meddle","자동사","① 간섭하다, 쓸데없이 참견하다 ② 만지작거리다"],["surge","동사","① 밀려들다, 쇄도하다 ② 급등하다"],["rendezvous","명사","① 만날 약속 만남, 회합② 만나는 장소, 회합장소"],["winsome","형용사","(사람·태도가) 마음을 끄는, 매력[애교] 있는"],["discern","동사","① 분별하다, 식별하다 ② 인식하다, 깨닫다"],["conifer","명사","침엽수"],["bloom","동사","① 꽃이 피다, 꽃이 피게 하다 ② 번영하다, 한창때이다"],["peasant","명사","① 농부, 소작농, 농군 ② 시골뜨기"],["regress","","되돌아가다; 역행하다; 퇴보하다"],["polarize","동사","① 양극화하다, 분열하다 ② 극성을 주다"],["harrowing","형용사","고뇌를 주는, 비참한, 괴로운"],["intoxicate","타동사","① 취하게 하다 ② 흥분시키다, 열중시키다"],["glue","명사","아교; 접착제, 풀"],["coax","동사","감언으로 구슬리다[설득하다], 달래다"],["hallmark","명사","①특징, 특질 ② 품질증명;품질 보증 마크"],["award","타동사","수여하다, 상을 주다"],["venomous","형용사","① 독이 있는 ② 악의에 찬, 원한을 품은"],["loyalty","명사","① 성실, 충실 ② 충절, 충성심, 애국심"],["framework","명사","① 뼈대, 골조 ② 틀 ③ 체제, 체계"],["advent","명사","출현, 도래"],["pliable","형용사","① 휘기 쉬운; 유순한 ② 순응적인, 고분고분한"],["represent","타동사","① 묘사하다; 말로 설명하다 ② 나타내다, 상징하다"],["yeast","명사","이스트, 누룩, 효모 .발효하다"],["facile","형용사","손쉬운, 용이한"],["vortex","명사","① 소용돌이, 회오리바람 ② 소용돌이"],["consent","타동사","동의하다, 찬성하다, 승인하다, 허가하다"],["osmosis","명사","삼투 (현상); 배어듦, 침투"],["ultimate","형용사","① 궁극적인, 최후의 ② 근본적인, 본원적인"],["cough","명사","기침, 헛기침 동사] 기침하다, 헛기침하다"],["dilemma","명사","딜레마, 진퇴양난, 궁지"],["aloft","형용사","d. 위로, 높이"],["emancipate","타동사","해방하다, 자유롭게 하다"],["beacon","명사","횃불, 봉화; 봉화대; 등대; 신호소"],["independent","형용사","(국가가) 독립한; 자주적인, 독자적인"],["marrow","명사","골수, 뼈골;정수, 알짜; 힘, 활력"],["pardon","명사","① 용서, 허용, 관대 ② 특사, 은사; 면죄부"],["transfigure","타동사","① 외형을 바꾸다, 변모시키다 ② 미화하다"],["compulsory","형용사","강제적인, 의무적인, 필수의"],["retention","명사","① 보유, 보존; 보류; 유지 ② 보유력; 기억력"],["scanty","형용사","부족한, 얼마 안 되는, 불충분한"],["dent","동사","① 움푹 들어가게 하다 ② 훼손하다, 손상하다"]],"53":[["fatal","형용사","치명적인"],["enclose","동사","① 둘러싸다, 에워싸다 ② 동봉하다, 봉해 넣다"],["speck","명사","① 작은 반점, 얼룩, 오점 ② 미진, 작은 알갱이"],["pang","명사","① 격통, 고통 ② 고민, 번민, 상심"],["inferior","형용사","① 아래쪽의, 하위의 ② 떨어지는, 열등한, 조악한"],["rectify","타동사","개정하다; 교정하다, 고치다"],["slight","형용사","① 약간의, 적은, 근소한 ② 가벼운; 사소한"],["bargain","명사","① 매매, 거래 ②산 물건"],["allure","동사","매혹하다, 유혹하다, 꾀어내다"],["crevice","명사","갈라진 틈, 균열"],["pervade","타동사","널리 퍼지다, 보급하다; ~에 가득 차다; 스며들다"],["malfunction","명사","(장기(臟器)·기계 등의) 기능 부전, 고장, 오작동"],["strict","형용사","엄한, 엄격한, 엄중한"],["hidebound","형용사","① 편협한, 도량이 좁은 ② 야위어 가죽만 남은"],["gravity","명사","① 중력, 인력 ② 진지함, 근엄 ③ 중대함, 심상치 않음"],["mercantile","형용사","① 상인의; 상업의; 무역에 종사하는 ② 중상주의의"],["potent","형용사","① 세력이 있는, 유력한 ② 효능 있는; 성적 능력이 있는"],["regime","명사","① 정권; 정부 ② 제도, 체제"],["dally","동사","① 희롱하다, 농탕치다 ② 낭비하다, 빈들거리다"],["arable","형용사","경작에 알맞은, 개간할 수 있는"],["cohesion","명사","화합, 결합, 단결, 유대; 응집력"],["usher","명사","안내인, 접수원, 문지기, 수위"],["dispute","동사","토의하다, 논쟁하다; 논박하다, 이의를 제기하다"],["olfactory","형용사","후각의; 냄새의"],["narrative","명사","① 이야기 ② 이야기체; 설화 문학 ③ 화술"],["domineer","동사","① 권력을 휘두르다, 압제하다 ② 우뚝 솟다"],["convolution","명사","① 회선, 나선 ② 주름 ③ 대단히 복잡한 것"],["resolve","동사","① 결의하다, 결정하다, 결심하다 ② 풀다, 해결하다"],["jovial","형용사","쾌활한, 명랑한, 즐거운, 유쾌한"],["contact","명사","① 접촉; 인접; 접촉물 ② 접근, 교제; 연락, 연결; 연줄"],["largess","명사","아낌없이 줌, 증여; 선물, 과분한 부조"],["preen","동사","① 부리로 다듬다 ② 몸치장을 하다, 멋을 부리다"],["treat","동사","① 다루다, 대우하다 ② 치료하다, 고치다, 처치하다"],["aura","명사","기운, 분위기"],["invaluable","형용사","값을 헤아릴 수 없는, 매우 귀중한"],["furnace","명사","① 노; 아궁이, 화덕; 난로 ② 용광로 ③ 혹독한 시련"],["philately","명사","우표 수집"],["opulent","형용사","부유한, 풍부한, 풍족한; 호화로운"],["vicinity","명사","근처, 부근 ="],["sap","타동사","활력을 없애다, 약화시키다"],["repertoire","명사","상연[연주] 목록[곡목], 레퍼토리"],["loan","명사","① 대부, 대여 ② 대부금, 융자; 공채, 차관"],["err","자동사","정도에서 벗어나다, 헤매다; 잘못하다, 실수하다"],["throng","동사","떼를 지어 모이다, 모여들다"],["confound","타동사","① 당황하게 하다 ② 혼동하다, 뒤죽박죽으로 하다"],["incubus","명사","① 악몽, 가위 몽마 ② 압박하는 일; 부담"],["brand-new","형용사","신제품의, 아주 새로운, 새것의"],["recoup","동사","① (손실 등을) 메우다, 벌충하다, 회복하다 ② 보상하다"],["sore","형용사","① 아픈, 쑤시는 ② 마음이 아픈, 슬픈"],["plagiarism","명사","표절; 도작, 표절물"]],"54":[["valiant","형용사","용감한, 씩씩한"],["pile","명사","① 쌓아올린 것, 더미 ② 다수, 대량 ③ 큰 돈, 부"],["refute","타동사","논박[반박]하다"],["podium","명사","지휘대; 연단"],["syllabus","명사","(강의 등의) 개요, 강의계획서"],["dismal","형용사","① 음울한; 황량한, 쓸쓸한 ② 서투른, 솜씨 없는"],["parable","명사","우화"],["cloy","동사","물리도록 먹이다, 물리게 하다; 물리다, 싫증나다"],["substance","명사","① 물질 ② 본질, 실체, 내용 ③ 요지, 요점"],["mandate","타동사","① 명령[지시]하다 ② 통치를 위임하다"],["anemia","명사","빈혈; 생기[활력]의 결핍"],["contaminate","타동사","오염시키다, 더럽히다"],["proselyte","동사","개종시키다; 좋은 조건으로 선발해 가다"],["recall","타동사","① 생각해 내다, 상기하다 ② 소환하다, 귀환시키다"],["irreparable","형용사","고칠[회복할, 돌이킬] 수 없는"],["smear","명사","① 얼룩, 오점 ② 중상, 비방, 명예 훼손"],["obstacle","명사","장애(물), 방해(물)"],["kidney","명사","① 신장; 콩팥 ② 성질, 기질, 종류, 형"],["entangle","타동사","① 엉키게 하다; 헝클리게 하다 ② 빠뜨리다"],["remnant","명사","① 남은 부분, 나머지 ② 유물, 자취"],["nibble","동사","① 조금씩 물어뜯다, 갉아 먹다 ② 약간 관심을 보이다"],["contract","동사","① 계약하다, 계약을 맺다 ② 물들다; (병에) 걸리다"],["obeisance","명사","① 존경, 경의; 복종 ② 경례, 절, 인사"],["undertake","동사","① 떠맡다, 착수하다 ② 약속하다, 보증하다"],["autonomy","명사","① 자율성, 자주성 ② 자치권, 자치제"],["persecute","타동사","(종교·주의 따위를 이유로) 박해하다, 학대하다"],["hindsight","명사","사정을 다 알게 됨, 뒤늦은 깨달음, 때늦은 지혜"],["trap","명사","① 덫, 올가미, 함정 ② 함정, 계략"],["augur","동사","전조[조짐]가 되다; 점치다, 예언하다"],["crop","명사","① 농작물, 곡물 ② 수확; 수확고"],["incriminate","타동사","죄를 씌우다; 고소[고발]하다"],["refuge","명사","① 피난, 보호 ② 피난처, 은신처 ③ 의지가 되는 사람"],["sinister","형용사","불길한, 재난의; 사악한, 나쁜"],["geometry","명사","기하학"],["heedless","형용사","부주의한, 무관심한; 경솔한, 무분별한"],["emit","타동사","(빛․열․냄새․소리 등을) 내다, 방출하다"],["breakdown","명사","①고장, 파손 ② 쇠약 ③ 분해; 몰락, 붕괴, 와해"],["delegate","타동사","① 대표로서 파견하다 ② 위임하다"],["limb","명사","① 수족, 손발, 팔, 다리 ② 큰 가지; 갈라진 가지"],["melt","동사","① 녹다, 용해하다; 녹이다 ② ~이 차차 없어지다"],["fervent","형용사","열심인, 열렬한"],["liability","명사","① 책임, 의무, 부담 ② 불리한 일, 장애"],["betoken","타동사","① 나타내다, 표시하다 ② ~의 징조이다"],["component","명사","성분, (구성) 요소, 부품"],["stutter","자동사","말을 더듬다, 더듬거리며 말하다"],["pawn","명사","① 전당; 전당물, 저당물 ② 볼모, 인질"],["appreciably","형용사","d. 눈에 띄게, 상당하게"],["roost","명사","① 홰; 보금자리 ② (사람의) 휴식처; 침소; 임시 숙소"],["dysfunction","명사","역 기능; 기능 장애"],["instruct","","① 지시하다, 명령하다 ② 알리다, 통지하다"]],"55":[["partial","형용사","① 부분적인, 불완전한 ② 편파적인, 불공평한"],["reinstate","타동사","원상태로 회복시키다, 복귀시키다"],["derogatory","형용사","경멸적인, 깔보는, 얕보는"],["stink","동사","① 고약한 냄새가 나다 ② 구린내가 나다, 수상쩍다"],["akin","형용사","① 혈족[동족]의 ② 같은 종류의, 유사한"],["commencement","명사","① 시작 ② 대학 졸업식, 학위 수여식"],["wax","자동사","① 커지다, 증대하다 ② (달이) 차다"],["ingenious","형용사","① 재간 있는, 영리한 ② 독창적인, 창의력이 있는"],["soak","동사","① 적시다, 담그다 ② 잠기다 ③ 빨아들이다, 이해하다"],["habiliment","명사","옷, 복장; 제복"],["repent","동사","후회하다, 유감으로 생각하다; 회개[참회]하다"],["premonition","명사","예고, 사전 경고; 예감, 징후, 전조"],["deposit","동사","① 놓다; 낳다 ② 침전시키다, 가라앉히다, 퇴적시키다"],["issue","명사","① 발행, 발표; 발행물 ② 논쟁, 쟁점; 문제 ③ 결과"],["affiliate","동사","① 제휴하다; 가입하다; 합병하다 ② 양자로 삼다"],["vulnerable","형용사","상처 입기 쉬운, 공격받기 쉬운; 비난받기 쉬운"],["credence","명사","신용, 신뢰, 신빙성"],["disclose","타동사","① 밝히다, 폭로하다 ②드러내다"],["argot","명사","은어, 속어"],["steep","형용사","① 경사가 급한, 가파른, 험준한, 비탈진 ② 급격한"],["embezzle","동사","횡령하다, 착복하다"],["proposition","명사","① 제안, 건의 ② 진술, 주장 ③ 명제"],["redress","타동사","① 바로잡다 ②배상하다"],["tip","명사","① 팁, 사례금 ② 정보, 조언 ③ 비결, 묘책"],["seduce","타동사","① 부추기다, 속이다, 꾀다 ②유혹하다; 매혹시키다"],["bowdlerize","타동사","충격적인 문구를 삭제하다"],["fiasco","명사","대실패, 큰 실수"],["transmit","동사","① 보내다, 발송하다; ② 옮기다, 전염시키다"],["ruffian","명사","악한, 불한당, 깡패"],["synchronize","동사","① 동시에 일어나다 ② 동일 시간으로 하다"],["cradle","동사","① 요람에 넣다; 흔들어 재우다 ② 보호하다; 육성하다"],["nonage","명사","① (법률상의) 미성년 ② 미발달, 미숙"],["quench","타동사","① (불을) 끄다 ② (갈증을) 풀다, (욕망 등을) 만족시키다"],["layman","명사","① 속인, 평신도 ② 아마추어, 비전문가"],["intent","명사","① 의향, 의도; 목적, 계획 ② 의미, 취지"],["enrapture","타동사","황홀하게 하다, 도취시키다"],["obscene","형용사","음란한, 외설적인; 추잡한"],["barricade","명사","방책; 통행 차단물, 바리케이드; 장애[방해]물"],["locate","동사","① 놓다, 두다, 설치하다 ②찾아내다, 발견하다"],["continent","형용사","자제하는, 절제를 지키는, 금욕적인"],["realm","명사","① 영역; 범위 ② 왕국, 국토"],["grime","명사","① 때, 그을음, 검댕 ② 오점"],["prologue","명사","① 머리말, 서문, 서언 ② (연극의) 개막사"],["condition","동사","① 조절하다; 길들이다 ② ~을 좌우하다"],["alias","명사","(범죄자 등의) 가명, 별명"],["demerit","명사","① 결점, 결함, 단점 ② 벌점"],["vault","동사","① 도약하다, 뛰어넘다 ② 둥근 천장 모양으로"],["mob","명사","① 군중; 폭도, 오합지졸 ② (사람·동물의) 무리, 떼, 모임"],["plume","명사","① 커다란 깃털, 깃털 장식 ② 기둥"],["fatigue","명사","① 피로, 피곤 ② 노동, 노고, 노역"]],"56":[["incorporate","동사","① 통합하다; 혼합하다 ② ~을 법인으로 만들다"],["felony","명사","중죄, 흉악 범죄"],["rebuff","타동사","거절하다, 퇴짜 놓다"],["sloth","명사","게으름, 나태"],["preternatural","형용사","이상한, 기이한, 불가사의한; 초자연적인"],["estimate","동사","① 어림잡다, 추정하다, 추산하다 ② 판단[평가]하다"],["misgiving","명사","걱정, 염려, 불안, 의혹"],["suit","명사","① 소송, 고소 ② 요청, 청원, 탄원 ③ 정장; 한 벌"],["assassinate","타동사","암살하다"],["elf","명사","작은 요정; 난쟁이, 꼬마; 장난꾸러기"],["random","형용사","닥치는 대로의, 임의의, 무작위의"],["skyrocket","동사","급히 상승하다; 급히 증대하다, 급등하다"],["peer","명사","또래친구; 같은 나이의 친구[동년배], 동료"],["dip","명사","① 살짝 담그기 ② 급강하; (가격 등의) 하락"],["coverage","명사","① 담보 범위, 보상 범위 ② 취재 범위"],["bumble","동사","① 실수하다, 실책을 하다, 갈팡질팡하다 ② 말을 더듬다"],["spread","동사","① 펴다, 펼치다 ② 퍼지다, 확산되다; 퍼뜨리다"],["providence","명사","① (신의) 섭리 ② 선견지명; 신중, 조심; 절약"],["upbeat","형용사","긍정적인, 낙관적인"],["crave","동사","① 갈망하다, 열망하다 ②~을 구하다, 간절히 원하다"],["lexicon","명사","사전; 어휘, 어휘 목록"],["hallow","동사","신성하게 하다, 신에게 바치다"],["brink","명사","① (벼랑 등의) 가장자리; 물가 ② 직전, 고비"],["pillory","타동사","(대중의) 웃음거리로 만들다, 강력히 비판하다"],["wardrobe","명사","① 옷장, 양복장; 의상실 ② 옷, 의상"],["trait","명사","(성격·습관의) 특징, 특성, 특색, 특질"],["obnoxious","형용사","아주 싫은, 불쾌한"],["fabrication","명사","① 제작, 제조, 구성, 조립 ② 거짓말; 위조; 위조물"],["negate","동사","① 무효로 하다, 취소하다 ② 부정하다"],["animosity","명사","악의, 원한, 반감, 적대감"],["vertebrate","명사","척추동물 / 형용사] 척추[등뼈]가 있는"],["congestion","명사","① 혼잡, 붐빔; 과잉, 밀집 ② 충혈, 울혈"],["gratis","형용사","d.형용사] 무료로[의], 공짜로[의]"],["restrict","타동사","① 제한하다, 한정하다 ② 금지하다, 제지하다"],["priest","명사","성직자; 목사; (가톨릭) 사제"],["detain","타동사","① 구금[억류]하다 ② 붙들다, 지체하게 하다"],["temperament","명사","기질, 성질, 성미; 흥분하기 쉬운 기질; 신경질 ="],["insight","명사","통찰, 간파; 통찰력"],["conjure","동사","① 마법으로 ~하다 ② 상기시키다, 떠올리게 하다"],["rend","동사","① 째다, 찢다 ② 나누다, 분열시키다; 떼어놓다"],["obvious","형용사","명백한, 분명한"],["mantle","명사","① 망토, 소매 없는 외투 ②~의 역할, 책임"],["inspire","동사","① 고무하다; 불어넣다 ②영감을 주다 ③ 를 들이마시다"],["havoc","명사","대황폐, 대파괴"],["audit","동사","① 회계를 감사하다 ② (수업을) 청강하다"],["prostitute","타동사","① 매춘하다, 몸을 팔다 ② 이익을 위해 팔다"],["capsize","동사","뒤집다[뒤집히다], 전복시키다"],["endemic","형용사","(특정 지역·집단) 고유의, 고질적인, 풍토적인"],["remit","동사","① 우송하다; 송금하다 ② 용서하다; 감면하다"],["diversity","명사","차이(점); 변화, 다양성"]],"57":[["hesitate","동사","① 주저하다, 망설이다 ② ~할 마음이 나지 않다"],["circumspect","형용사","신중한, 조심성 있는"],["reservoir","명사","① 저수지; 저장소 ② 축적, 저장"],["designate","타동사","① ~을 나타내다, 가리키다 ② 지명하다, 임명하다"],["pusillanimous","형용사","무기력한, 겁 많은, 소심한"],["spearhead","타동사","선두에 서다, 선봉을 맡다"],["marked","형용사","명료한; 두드러진, 현저한; 저명한"],["dermatologist","명사","피부과 의사"],["erase","동사","① 지우다; 말소 ② 없애다, 잊어버리다"],["attrition","명사","① 마찰; 마멸 ② 소모 ③ 감소, 축소"],["suppurate","자동사","(상처가) 곪다, 화농하다, 고름이 괴다"],["listless","형용사","열의 없는, 무기력한, 늘쩍지근한"],["patron","명사","① 단골, 고객 ② 도움을 주는 사람, 후원자"],["inject","타동사","① (예방) 주사하다 ②주입하다; 도입하다"],["motto","명사","① 모토, 표어, 좌우명 ② 격언, 금"],["wreath","명사","화환; 화관"],["annul","타동사","무효로 하다, 취소하다"],["conclusion","명사","① 결말, 종결, 끝맺음, 최종적 해결 ② 결론"],["enmesh","타동사","(곤란 등에) 말려들게 하다, 빠뜨리다"],["judicial","형용사","① 사법의, 재판상의; 재판소의 ② 공정한; 판단력 있는"],["drip","명사","방울져 떨어짐; 물방울"],["moderate","타동사","알맞도록 하다, 완화하다; 경감하다, 조절하다"],["veneer","동사","겉을 꾸미다, (결점 등을) ~으로 감추다"],["inherent","형용사","본래부터 가지고 있는, 고유의, 타고난, 내재하는"],["profile","명사","① 옆모습, 측면 ② 윤곽 ③ 인물 소묘, 프로필"],["strain","동사","①잡아당기다; 긴장시키다 ② 혹사하다"],["budge","동사","① 조금 움직이다 ② 바꾸다 양보하다"],["remedy","명사","① 치료, 의료; 치료약 ② 구제책, 교정법"],["apparel","명사","의복, 복장"],["threadbare","형용사","①다 떨어진, 낡은; 초라한"],["portray","타동사","①그리다, 초상을 그리다 ② 묘사하다"],["corridor","명사","복도, 회랑"],["oblige","동사","① ~을 어쩔 수 없이 ~에게 ...하도록 강요하다 ② 돕다"],["luminary","명사","① 발광체 ②전문가, 유명인"],["concern","타동사","① ~에 관계하다 ~에 중요하다 ② 관심을 갖다; 염려하다"],["hull","명사","① 선체 ② 껍질, 껍데기, 외피"],["assign","동사","① 할당하다, 배당하다 ② 부여하다, 주다"],["unbridled","형용사","고삐를 매지 않은; 억제되지 않은, 난폭한"],["straitjacket","명사","① 구속복 ② 구속, 엄한 속박"],["transition","명사","① 변천, 변화, 추이 ② 과도기, 변천기"],["ferret","동사","캐내다, 찾아내다"],["eloquence","명사","웅변, 달변"],["relegate","타동사","지위를 떨어뜨리다, 좌천시키다"],["gourmand","명사","대식가(大食家); 미식가"],["count","동사","① 세다 ② 중요하다③ 간주되다 ④ 의지하다"],["fable","명사","① 우화, 교훈적 이야기 ② 신화, 전설, 설화"],["privatize","타동사","① 민영화하다 ② 배타[독점]하다; 한정[전유]하다"],["rupture","명사","파열, 파괴; 결렬; 불화, 사이가 틀어짐"],["blast","명사","① 한바탕의 바람, 돌풍, 폭풍 ② 폭발 ③ 심한 비난"],["snoop","자동사","기웃거리며 다니다, 염탐하다; 꼬치꼬치 캐묻다"]],"58":[["relevant","형용사","관련 있는; 적절한, 타당한"],["domesticate","타동사","① 길들이다; 재배하다 ② 풍토에 익숙하게 하다"],["convent","명사","수녀회, 수녀원; 수도원"],["stumble","동사","①비틀거리다② 잘못하다③ 마주치다 ④ 말을 더듬다"],["menace","명사","위협, 협박, 공갈; 위협적인[위험한] 존재"],["supervene","자동사","수반하여[잇따라] 일어나다, 결과로서 일어나다"],["perdition","명사","멸망, 파멸, 영원한 죽음; 지옥에 떨어짐; 지옥"],["intrigue","명사","① 음모② 은밀한 관계, 불의, 밀통 동사] ① 호기심을자아내다"],["degenerate","자동사","저하[악화]되다, 나빠지다, 퇴보하다"],["survey","동사","① 살피다 ② 측량하다③ 조사하다 명사] 개관; 측량; 조사"],["querulous","형용사","불평을 하는, 짜증내는; 성을 잘 내는"],["pitch","동사","① 던지다 ② 선전하다, 홍보하다"],["coup","명사","① 쿠데타 ② (불시의) 일격; 대성공, 대단한 성취"],["arbitrate","동사","중재하다, 조정하다"],["habitat","명사","서식지, 생육지, 서식 환경"],["veer","동사","(바람의) 방향이 바뀌다; (의견·화제 등이) 바뀌다"],["nerve","명사","① 신경; 신경 조직 ② 용기, 담력 ③ 철면피 동사] 격려하다"],["traduce","타동사","비방하다, 중상하다"],["untold","형용사","① 말을 하지 않은, 밝혀지지 않은 ② 셀 수 없는, 막대한"],["stoop","동사","구부리다명사] ① 구부정한 자세 ② 현관"],["pledge","명사","서약; 저당 동사] ① ~을 맹세하다, 보증하다"],["azure","형용사","하늘색의, 푸른/ 명사] 하늘색"],["loot","명사","① 전리품; 약탈; 부정 이득 ② 거금"],["cognomen","명사","① (이름에서의) 성(姓)② 이름, 명칭; 별명"],["submit","동사","① 복종하다, 굴복하다[to] ② 제출하다"],["flamboyant","형용사","화려한, 현란한"],["rein","명사","① 고삐 ② 통제권, 지휘권 동사] 억제하다, 제어하다"],["gazette","명사","신문, 정기 간행물; 관보, 학보"],["contest","동사","① 겨루다, 싸우다② 논쟁하다; 이의를 제기하다 명사] 경기"],["book","동사","① 예약하다 ② (문서·명부에 이름 등을) 기입하다"],["proper","형용사","① 적당한 ② 예의바른, 품위 있는 ③ 고유의, 특유한"],["torpedo","명사","어뢰, 수뢰 동사] ①(정책·제도를) 무력하게 하다"],["officious","형용사","① 참견하기 좋아하는② <외교> 비공식의"],["apartheid","명사","인종 차별 정책; 분리, 배타"],["eclipse","명사","① 식(蝕) ② 실추 타동사] ①빛을 잃게 만들다; 능가하다"],["vantage","명사","① 우월, 우세, 유리함"],["putrefy","동사","부패시키다, 썩게 하다; 부패하다, 썩다"],["descent","명사","① 내리기, 강하, 하강 ② 내리막길 ③ 가계, 혈통, 가문"],["expand","동사","① 확대되다, 확대시키다 ② 발전하다 ③ 더 자세히 말하다"],["bumptious","형용사","(사람·행위·태도가) 거만한, 오만한"],["interrogate","동사","질문하다; 심문하다"],["relinquish","타동사","(권리 등을) 포기하다, 내주다; 그만 두다; 버리다, 단념하다"],["context","명사","(글의) 전후 관계, 문맥; (사건 등에 대한) 경위, 배경; 상황"],["attest","동사","① 증명하다, 입증하다"],["litigation","명사","소송, 기소"],["redound","자동사","① 초래하다, 높이다 ② 미치다, 돌아가다 ③ 되돌아가다"],["mint","명사","① 박하 ② 화폐 주조소 ③ 거액 타동사] 주조하다 형용사] 미사용의"],["enfetter","타동사","~에게 족쇄를 채우다; 속박하다; 노예로 만들다"],["repetitive","형용사","되풀이되는, 반복적인"],["feast","명사","① 축제 동사] ① 잔뜩 즐기다 ② 대접하다; 즐겁게 하다"]],"59":[["shun","타동사","피하다, 꺼리다"],["anthropoid","명사","유인원 형용사] (동물이)사람과 비슷한"],["expose","타동사","① 노출시키다; 접하게 하다 ②폭로하다 ③ 보이다"],["nefarious","형용사","사악한, 극악한, 흉악한"],["disgrace","명사","불명예, 망신, 치욕 타동사]명예를 더럽히다, 망신시키다"],["response","명사","① 대답, 응답, 회신, 답장 ② 반응, 대응, 부응"],["plaster","타동사","① 회반죽을 바르다② 더덕더덕 바르다 명사] 깁스"],["render","동사","① 표현하다; 연기[연주]하다; 번역하다 ② 주다"],["myth","명사","① 신화 ② (근거 없는) 사회적 통념"],["civil","형용사","① 시민의, 민간의 ② 예의바른, 정중한"],["engender","동사","(감정·상태 등을) 발생[야기]시키다, 일으키다"],["indigence","명사","가난, 빈곤"],["mutual","형용사","① 서로의, 상호관계가 있는 ② 공통의, 공동의"],["suffice","동사","충분하다, 족하다"],["aeon","명사","무한히 긴 시기, 영겁"],["disillusion","타동사","환상을 깨뜨리다, 미몽을 깨우치다 명사] 각성; 환멸"],["plump","형용사","통통한, 포동포동한"],["stroll","동사","한가로이 거닐다, 어슬렁거리다, 산책하다 명사] 거닐기, 산책"],["odds","명사","① 가능성 ② 불화; 역경 ③ 우세 ④ 차이; 불평등"],["trounce","타동사","① 몹시 때리다, 몹시 치다 ② 참패시키다, 완파하다"],["bud","명사","싹, 눈; 봉오리 동사] 싹트다; 발육하기 시작하다"],["jettison","타동사","짐을 버리다; (방해물 등을) 버리다"],["flair","명사","① 예민한 육감[직감]; (타고난) 재주, 재능 ② 세련, 멋"],["customize","타동사","주문 받아 만들다, 주문 제작하다"],["upright","형용사","① 똑바른, \\ 수직으로 세워 둔 ② 곧은, 강직한"],["ambush","동사","매복하다; 매복하여 습격하다"],["bullion","명사","금은괴; 순금, 순은"],["credit","명사","① 신용 ② 명성; 인정 ③ 채권 ④ 학점 타동사] ① ~에게 돌리다"],["occupy","동사","① 차지하다; 요하다 ② 점령[점거]하다"],["congress","명사","① 의회, 국회 ② 대표자·사절·위원 등의) 회의, 회합"],["swap","동사","(물물) 교환하다, 바꾸다 명사] 교환품"],["layout","명사","① 구획, 배치, 설계; 기획; 배치도 ② 페이지 배정, 레이아웃"],["gravid","형용사","① 임신한② 전조가 되는, 불길한③ <비유> ~으로 가득 찬"],["verisimilitude","명사","정말[진실] 같음, 있을 법함, 신빙성"],["pursue","동사","① 뒤쫓다, 추적하다 ② 추구하다 ③ 수행하다, 종사하다"],["farce","명사","① 소극(笑劇), 익살극 ② 익살, 우스개; 어리석은 짓, 웃음거리"],["expedite","타동사","촉진시키다; 신속히 처리하다"],["bridle","명사","① 굴레; 고삐② 구속, 속박, 제어; 구속하는 것"],["deracinate","타동사","① 근절하다, 뿌리 뽑다 ②쫓아내다"],["herd","명사","① 떼② 사람의 무리, 군중 동사] ① 이동하다[하게 하다] ②몰다"],["revel","동사","① 주연을 베풀다 ②~에 빠지다 ③ 허비하다 명사] 술잔치; 환락"],["console","타동사","위로하다, 위안하다 명사] 조종대, 제어 탁자,콘솔"],["regurgitate","동사","① 역류시키다; 토하다 ②그대로 되뇌다, 반복하다"],["procedure","명사","순서, 절차, 방법"],["limpid","형용사","① 맑은, 투명한 ② 명쾌한"],["assert","타동사","단언하다, 역설하다, 강력히 주장하다"],["squeamish","형용사","① 비위가 약한 ②지나치게 까다로운, 너무 결벽한"],["testimony","명사","① (법정에서의) 선서 증언 ② 증거"],["redolent","형용사","① 향기로운;냄새[향기]가 나는 ② 생각나게 하는, 암시하는"],["incline","동사","① 기울이다 ② 내키게 하다, ~할 마음이 일게 하다"]],"60":[["tenacious","형용사","고집이 센, 집요한, 완강한"],["envelop","타동사","싸다, 봉하다, 덮다, 덮어 가리다"],["siege","명사","① 포위 공격, 공성, 포위 작전② 끈덕진 권유; 끈질긴 병"],["assess","타동사","① 산정[사정]하다 ② 판단[평가]하다"],["portable","형용사","휴대용의, 들고 나닐 수 있는"],["recital","명사","① 독주회, 독창회; 리사이틀 ② 암송, 낭독③ 상술; 이야기"],["startle","동사","깜짝 놀라게 하다; 깜짝 놀라다 명사] 놀람; 깜짝 놀라게 하는 것"],["morsel","명사","① 한 입, 가벼운 식사 ② 한 조각, 소량 ③ 맛있는 음식"],["annex","타동사","① 합병하다② 첨부하다 명사] ① 별관 ② 부가물"],["contagion","명사","① 전염 ② (사상·태도·감정·악평 등의) 전파, 전염"],["spiritual","형용사","① 정신의, 영적인 ② 종교적인"],["maul","타동사","거칠게 다루다; 혹평하다"],["uneasy","형용사","불안한, 우려되는; (몸이) 불편한, 불쾌한"],["eliminate","타동사","① 제거하다, 배제하다 ② 무시하다; 실격시키다"],["spice","명사","① 양념, 향신료 ② 흥취, 묘미"],["inaugurate","타동사","① 취임시키다 ② 개시하다, 시작하다 ③ 열다, 개시하다"],["hermit","명사","수행자; 은둔자, 은거자"],["reserve","동사","① 비축하다 ② 예약하다 명사] ① 예비품 ② 매장량③ 자제"],["decisive","형용사","① 결정적인, 결말짓는; 중대한 ② 과단성 있는, 단호한"],["nicety","명사","① 정확성 ② 세부 사항; 미묘 ③ 까다로움; 다루기 힘듦"],["digress","자동사","(이야기가) 옆길로 빗나가다,여담을 하다, 탈선하다"],["anachronism","명사","시대착오, 시대착오적인 사람[것, 관습]; 연대[날짜]의 오기"],["waver","자동사","① 흔들리다; 너울거리다; 떨리다② 망설이다, 주저하다"],["terrestrial","형용사","① 지구의 ② 육지의 ③ 지상파를 이용하는 명사] 인간"],["convict","타동사","유죄를 선고하다, 유죄를 입증하다 명사] 기결수, 죄수"],["venue","명사","사건의 현장; (스포츠 경기·회담 등의) 개최지; 재판지"],["polish","동사","① 닦다 ② 다듬다, 품위 있게 하다; 퇴고하다"],["gaudy","형용사","화려한; (색깔이) 야한, 천박한, 속되게 사치스러운"],["retort","동사","① 보복하다 ② 반론하다 명사] 재치 있는 응수 말대꾸"],["asset","명사","① (pl.) 자산, 재산 ② 이점, 장점"],["pore","자동사","① 자세히 보다 ② 숙고하다 명사] 털구멍; 기공"],["indisputable","형용사","논의[반박]의 여지가 없는, 명백[확실]한"],["crucify","타동사","① 십자가에 못 박다 ② 혹평하다 ③ 박해하다"],["loaf","동사","빈둥거리다, 놀고먹다 명사] 덩어리, 빵 한 덩어리"],["brunt","명사","(공격의) 예봉, 주력"],["grant","동사","① 주다②허가하다; 인정하다 명사] ① 보조금② 수여; 허가"],["finesse","명사","① 솜씨, 수완 ② 책략, 술책"],["conquer","동사","① 정복하다 ② (다루기 힘든 것을) 타파하다, 극복하다"],["poach","동사","① 밀렵하다 ② (남의 권리·영역 등을) 침범[침해]하다"],["onus","명사","부담, 무거운 짐; 책임, 의무"],["authenticate","타동사","진짜임을 증명[입증]하다"],["precinct","명사","① 선거구; 관할 구역 ② 경내; 구내③ 경계; 주위"],["forerunner","명사","선구자; 선조; 전조"],["repeal","명사","(법률의) 폐지, 폐기, 취소, 철회"],["buoy","명사","부표, 찌 동사] ① 뜨게 하다; 뜨다② 기운을 북돋우다"],["dissimulate","동사","(감정 등을) 숨기다; 모르는 체하다, 시치미 떼다"],["surname","타동사","~에게 별명[성]을 붙이다; 별명[성]으로 부르다"],["corporation","명사","① 기업, 회사, 법인, 협회 ② 유한회사, 주식회사"],["encumber","타동사","방해하다, 지장을 주다; (빚·의무 등을) 지우다; 막다"],["logrolling","명사","(의원 간의) 상호 원조, 결탁; (동업자 사이의) 상부상조"]]};
+const TOTAL_DAYS = 60;
+const STORAGE_KEY = 'mvp_progress_v1';
+
+const state = {
+  day: 1,
+  mode: 'browse',      // 'browse' | 'flashcard' | 'quiz' | 'review'
+  reviewScope: 'day',  // 'day' | 'all'  (used in review mode)
+  fcIdx: 0,
+  flipped: false,
+  shuffle: false,
+  quizIdx: 0,
+  quizAnswered: false,
+  quizScore: 0,
+  quizOptions: [],
+  quizOrder: [],
+  known: {},           // {day: Set of indices known}
+  unknown: {},         // {day: Set of indices marked unknown}
+  order: {}
+};
+
+// Initialize
+for (let d = 1; d <= TOTAL_DAYS; d++) {
+  state.known[d] = new Set();
+  state.unknown[d] = new Set();
+  state.order[d] = VOCAB[d].map((_, i) => i);
+}
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data.known) {
+      for (const d in data.known) {
+        if (state.known[d]) state.known[d] = new Set(data.known[d]);
+      }
+    }
+    if (data.unknown) {
+      for (const d in data.unknown) {
+        if (state.unknown[d]) state.unknown[d] = new Set(data.unknown[d]);
+      }
+    }
+    if (data.day) state.day = data.day;
+    if (data.mode) state.mode = data.mode;
+    if (data.reviewScope) state.reviewScope = data.reviewScope;
+  } catch (e) {
+    console.warn('Failed to load progress', e);
+  }
+}
+
+function saveProgress() {
+  try {
+    const knownObj = {};
+    const unknownObj = {};
+    for (const d in state.known) knownObj[d] = [...state.known[d]];
+    for (const d in state.unknown) unknownObj[d] = [...state.unknown[d]];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      known: knownObj,
+      unknown: unknownObj,
+      day: state.day,
+      mode: state.mode,
+      reviewScope: state.reviewScope
+    }));
+  } catch (e) {
+    console.warn('Failed to save progress', e);
+  }
+}
+
+const $ = id => document.getElementById(id);
+
+function shuffleArr(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function markUnknown(day, idx) {
+  state.unknown[day].add(idx);
+  state.known[day].delete(idx);
+}
+
+function markKnown(day, idx) {
+  state.known[day].add(idx);
+  state.unknown[day].delete(idx);
+}
+
+function unmarkAll(day, idx) {
+  state.known[day].delete(idx);
+  state.unknown[day].delete(idx);
+}
+
+// Count total unknown words
+function countUnknownAll() {
+  let total = 0;
+  for (let d = 1; d <= TOTAL_DAYS; d++) total += state.unknown[d].size;
+  return total;
+}
+
+// Get current words to display based on mode
+function currentWords() {
+  if (state.mode === 'review') {
+    // Build list of {day, idx, word, pos, meaning}
+    const list = [];
+    if (state.reviewScope === 'day') {
+      const indices = [...state.unknown[state.day]].sort((a, b) => a - b);
+      indices.forEach(i => {
+        const v = VOCAB[state.day][i];
+        list.push({ day: state.day, idx: i, w: v[0], p: v[1], m: v[2] });
+      });
+    } else {
+      // All days
+      for (let d = 1; d <= TOTAL_DAYS; d++) {
+        const indices = [...state.unknown[d]].sort((a, b) => a - b);
+        indices.forEach(i => {
+          const v = VOCAB[d][i];
+          list.push({ day: d, idx: i, w: v[0], p: v[1], m: v[2] });
+        });
+      }
+    }
+    return list;
+  }
+  // Browse / flashcard / quiz use day order
+  return state.order[state.day].map(i => {
+    const v = VOCAB[state.day][i];
+    return { day: state.day, idx: i, w: v[0], p: v[1], m: v[2] };
+  });
+}
+
+function pickWrongMeanings(excludeMeaning, n) {
+  const pool = [];
+  for (let d = 1; d <= TOTAL_DAYS; d++) {
+    VOCAB[d].forEach(v => {
+      if (v[2] !== excludeMeaning) pool.push(v[2]);
+    });
+  }
+  return shuffleArr(pool).slice(0, n);
+}
+
+function renderNav() {
+  const unkTotal = countUnknownAll();
+  const modes = [
+    { id: 'browse', label: '단어장' },
+    { id: 'flashcard', label: '플래시카드' },
+    { id: 'quiz', label: '퀴즈' },
+    { id: 'review', label: `모름 ${unkTotal > 0 ? '(' + unkTotal + ')' : ''}`, review: true }
+  ];
+  $('modeTabs').innerHTML = modes.map(m => {
+    let cls = 'mode-tab';
+    if (m.review) cls += ' review-tab';
+    if (state.mode === m.id) cls += ' active';
+    return `<button class="${cls}" data-mode="${m.id}">${m.label}</button>`;
+  }).join('');
+  $('modeTabs').querySelectorAll('.mode-tab').forEach(btn => {
+    btn.onclick = () => setMode(btn.dataset.mode);
+  });
+
+  // Day section: normal day grid OR review scope selector
+  if (state.mode === 'review') {
+    const unkDay = state.unknown[state.day].size;
+    const unkAll = countUnknownAll();
+    $('daySection').innerHTML = `
+      <div class="scope-selector">
+        <button class="scope-btn ${state.reviewScope === 'day' ? 'active' : ''}" data-scope="day">
+          Day ${state.day}의 모름 (${unkDay})
+        </button>
+        <button class="scope-btn ${state.reviewScope === 'all' ? 'active' : ''}" data-scope="all">
+          전체 모름 (${unkAll})
+        </button>
+      </div>
+    `;
+    $('daySection').querySelectorAll('.scope-btn').forEach(btn => {
+      btn.onclick = () => setReviewScope(btn.dataset.scope);
+    });
+  } else {
+    let dayHtml = '<div class="day-grid">';
+    for (let d = 1; d <= TOTAL_DAYS; d++) {
+      const total = VOCAB[d].length;
+      const known = state.known[d].size;
+      const unk = state.unknown[d].size;
+      const complete = known === total && total > 0;
+      const pct = total > 0 ? Math.round((known / total) * 100) : 0;
+      const pctText = known > 0 && !complete ? `<span class="pct">${pct}%</span>` : '';
+      const unkDot = unk > 0 ? '<span class="unk-dot"></span>' : '';
+      dayHtml += `<button class="day-btn ${state.day === d ? 'active' : ''} ${complete ? 'complete' : ''}" data-day="${d}">${unkDot}${d}${pctText}</button>`;
+    }
+    dayHtml += '</div>';
+    $('daySection').innerHTML = dayHtml;
+    $('daySection').querySelectorAll('.day-btn').forEach(btn => {
+      btn.onclick = () => setDay(parseInt(btn.dataset.day));
+    });
+  }
+}
+
+function renderBrowse() {
+  const words = currentWords();
+  const head = `
+    <div class="options-row">
+      <label><input type="checkbox" id="shuffleChk" ${state.shuffle ? 'checked' : ''}> 순서 섞기</label>
+      <span style="color: var(--text-tertiary);">·</span>
+      <span>탭: 암기 완료 · 길게 눌러 모름 표시</span>
+    </div>
+  `;
+  const list = words.map((v, i) => {
+    const isKnown = state.known[v.day].has(v.idx);
+    const isUnk = state.unknown[v.day].has(v.idx);
+    let cls = 'word-card';
+    if (isKnown) cls += ' known';
+    if (isUnk) cls += ' unknown';
+    const mark = isKnown ? '✓' : (isUnk ? '✗' : '');
+    const markCls = isKnown ? 'check-mark' : 'check-mark unk';
+    return `<div class="${cls}" data-idx="${v.idx}" data-day="${v.day}">
+      <div class="word-num">${String(i+1).padStart(2,'0')}</div>
+      <div class="word-main">
+        <div class="word-header">
+          <span class="word-text">${v.w}</span>
+          ${v.p ? `<span class="word-pos">${v.p}</span>` : ''}
+        </div>
+        <div class="word-meaning">${v.m}</div>
+      </div>
+      <div class="${markCls}">${mark}</div>
+    </div>`;
+  }).join('');
+  $('mainContent').innerHTML = head + list;
+  $('shuffleChk').onchange = e => {
+    state.shuffle = e.target.checked;
+    state.order[state.day] = state.shuffle
+      ? shuffleArr(VOCAB[state.day].map((_, i) => i))
+      : VOCAB[state.day].map((_, i) => i);
+    renderContent();
+  };
+
+  // Tap = toggle known; Long-press = mark as unknown
+  $('mainContent').querySelectorAll('.word-card').forEach(card => {
+    const idx = parseInt(card.dataset.idx);
+    const day = parseInt(card.dataset.day);
+    let pressTimer = null;
+    let longPressed = false;
+
+    const start = () => {
+      longPressed = false;
+      pressTimer = setTimeout(() => {
+        longPressed = true;
+        // Toggle unknown
+        if (state.unknown[day].has(idx)) state.unknown[day].delete(idx);
+        else markUnknown(day, idx);
+        saveProgress();
+        renderNav();
+        renderBrowse();
+        renderProgress();
+      }, 500);
+    };
+    const cancel = () => {
+      if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+    };
+    const click = (e) => {
+      if (longPressed) { e.preventDefault(); return; }
+      if (state.known[day].has(idx)) state.known[day].delete(idx);
+      else markKnown(day, idx);
+      saveProgress();
+      renderNav();
+      renderBrowse();
+      renderProgress();
+    };
+
+    card.addEventListener('touchstart', start, { passive: true });
+    card.addEventListener('touchend', cancel);
+    card.addEventListener('touchmove', cancel);
+    card.addEventListener('mousedown', start);
+    card.addEventListener('mouseup', cancel);
+    card.addEventListener('mouseleave', cancel);
+    card.addEventListener('click', click);
+  });
+}
+
+function renderFlashcard() {
+  const words = currentWords();
+  if (words.length === 0) {
+    if (state.mode === 'review') {
+      $('mainContent').innerHTML = `
+        <div class="empty-state">
+          <div class="icon">✓</div>
+          <p>복습할 단어가 없습니다</p>
+          <p class="hint">플래시카드에서 '모름' 버튼을 누르면 여기로 모입니다</p>
+        </div>`;
+    }
+    return;
+  }
+  if (state.fcIdx >= words.length) state.fcIdx = 0;
+  const v = words[state.fcIdx];
+  const total = words.length;
+  const isKnown = state.known[v.day].has(v.idx);
+  const isUnk = state.unknown[v.day].has(v.idx);
+
+  const isReview = state.mode === 'review';
+  const head = isReview ? '' : `
+    <div class="options-row">
+      <label><input type="checkbox" id="shuffleFc" ${state.shuffle ? 'checked' : ''}> 순서 섞기</label>
+    </div>
+  `;
+
+  const reviewHeader = isReview ? `
+    <div class="review-summary">
+      <span class="review-summary-count">복습 중: ${state.reviewScope === 'day' ? 'Day ' + state.day : '전체'} · ${total}개</span>
+      <button class="clear-unk-btn" id="clearUnkBtn">이 단어 모름 해제</button>
+    </div>
+  ` : '';
+
+  const dayLabel = isReview ? `<div class="flashcard-daylabel">Day ${v.day}</div>` : '';
+
+  let statusText = '';
+  if (isKnown) statusText = ' · ✓ 암기됨';
+  else if (isUnk) statusText = ' · ✗ 모름';
+
+  const card = state.flipped
+    ? `<div class="flashcard" id="fcCard">
+        ${dayLabel}
+        <div class="flashcard-pos">${v.w}${v.p ? ' · ' + v.p : ''}</div>
+        <div class="flashcard-meaning">${v.m}</div>
+        <div class="flashcard-hint">카드 탭 → 영어 단어로</div>
+       </div>`
+    : `<div class="flashcard" id="fcCard">
+        ${dayLabel}
+        <div class="flashcard-word">${v.w}</div>
+        ${v.p ? `<div class="flashcard-pos">${v.p}</div>` : ''}
+        <div class="flashcard-hint">카드 탭 → 뜻 보기${statusText}</div>
+       </div>`;
+
+  const nav = `
+    <div class="fc-nav">
+      <button class="btn" id="fcPrev">← 이전</button>
+      <span class="fc-counter">${state.fcIdx + 1} / ${total}</span>
+      <div class="fc-nav-side">
+        <button class="btn danger" id="fcUnknown">모름</button>
+        <button class="btn success" id="fcKnown">암기</button>
+        <button class="btn" id="fcNext">다음 →</button>
+      </div>
+    </div>
+  `;
+  $('mainContent').innerHTML = reviewHeader + head + card + nav;
+
+  if ($('shuffleFc')) {
+    $('shuffleFc').onchange = e => {
+      state.shuffle = e.target.checked;
+      state.order[state.day] = state.shuffle
+        ? shuffleArr(VOCAB[state.day].map((_, i) => i))
+        : VOCAB[state.day].map((_, i) => i);
+      state.fcIdx = 0;
+      state.flipped = false;
+      renderContent();
+    };
+  }
+  if ($('clearUnkBtn')) {
+    $('clearUnkBtn').onclick = () => {
+      state.unknown[v.day].delete(v.idx);
+      saveProgress();
+      renderNav();
+      // If list becomes empty, go back to first; otherwise stay same index
+      const newWords = currentWords();
+      if (state.fcIdx >= newWords.length) state.fcIdx = Math.max(0, newWords.length - 1);
+      renderFlashcard();
+      renderProgress();
+    };
+  }
+
+  $('fcCard').onclick = () => {
+    state.flipped = !state.flipped;
+    renderFlashcard();
+  };
+  $('fcPrev').onclick = e => {
+    e.stopPropagation();
+    state.fcIdx = (state.fcIdx - 1 + total) % total;
+    state.flipped = false;
+    renderFlashcard();
+  };
+  $('fcNext').onclick = e => {
+    e.stopPropagation();
+    state.fcIdx = (state.fcIdx + 1) % total;
+    state.flipped = false;
+    renderFlashcard();
+  };
+  $('fcKnown').onclick = e => {
+    e.stopPropagation();
+    markKnown(v.day, v.idx);
+    saveProgress();
+    renderNav();
+    renderProgress();
+    if (isReview) {
+      // Removed from list. Stay on same index (next unknown slides in)
+      const newWords = currentWords();
+      if (newWords.length === 0) { renderFlashcard(); return; }
+      if (state.fcIdx >= newWords.length) state.fcIdx = 0;
+      state.flipped = false;
+      renderFlashcard();
+    } else {
+      state.fcIdx = (state.fcIdx + 1) % total;
+      state.flipped = false;
+      renderFlashcard();
+    }
+  };
+  $('fcUnknown').onclick = e => {
+    e.stopPropagation();
+    markUnknown(v.day, v.idx);
+    saveProgress();
+    renderNav();
+    renderProgress();
+    state.fcIdx = (state.fcIdx + 1) % total;
+    state.flipped = false;
+    renderFlashcard();
+  };
+}
+
+function startQuiz() {
+  state.quizIdx = 0;
+  state.quizScore = 0;
+  state.quizAnswered = false;
+  const words = currentWords();
+  // For review mode, quiz uses only review words; for others, all day words
+  if (state.mode === 'review') {
+    state.quizOrder = shuffleArr(words.map(w => ({ day: w.day, idx: w.idx })));
+  } else {
+    const indices = VOCAB[state.day].map((_, i) => i);
+    state.quizOrder = shuffleArr(indices).map(i => ({ day: state.day, idx: i }));
+  }
+  if (state.quizOrder.length > 0) prepareQuizOptions();
+}
+
+function prepareQuizOptions() {
+  const item = state.quizOrder[state.quizIdx];
+  const correct = VOCAB[item.day][item.idx];
+  const wrongs = pickWrongMeanings(correct[2], 3);
+  const options = shuffleArr([correct[2], ...wrongs]);
+  state.quizOptions = options.map(m => ({ text: m, correct: m === correct[2], _picked: false }));
+}
+
+function renderQuiz() {
+  const qTotal = state.quizOrder.length;
+  if (qTotal === 0) {
+    $('mainContent').innerHTML = `
+      <div class="empty-state">
+        <div class="icon">✓</div>
+        <p>퀴즈에 포함할 단어가 없습니다</p>
+      </div>`;
+    return;
+  }
+  if (state.quizIdx >= qTotal) {
+    const pct = Math.round((state.quizScore / qTotal) * 100);
+    $('mainContent').innerHTML = `
+      <div class="quiz-result">
+        <div class="quiz-score">${state.quizScore} / ${qTotal}</div>
+        <div class="quiz-score-label">정답률 ${pct}%</div>
+        <div class="quiz-bar"><div class="quiz-fill" style="width:${pct}%"></div></div>
+        <button class="btn" id="restartQuiz">다시 풀기</button>
+      </div>
+    `;
+    $('restartQuiz').onclick = () => { startQuiz(); renderQuiz(); };
+    return;
+  }
+
+  const item = state.quizOrder[state.quizIdx];
+  const v = VOCAB[item.day][item.idx];
+
+  const opts = state.quizOptions.map((o, i) => {
+    let cls = 'quiz-option';
+    if (state.quizAnswered) {
+      cls += ' disabled';
+      if (o.correct) cls += ' correct';
+      else if (o._picked) cls += ' wrong';
+    }
+    return `<button class="${cls}" data-i="${i}">${o.text}</button>`;
+  }).join('');
+
+  const dayPrefix = state.mode === 'review' ? `Day ${item.day} · ` : '';
+
+  $('mainContent').innerHTML = `
+    <div class="quiz-status">
+      <span>${dayPrefix}문제 ${state.quizIdx + 1} / ${qTotal}</span>
+      <span>정답: ${state.quizScore}</span>
+    </div>
+    <div class="quiz-question">${v[0]}</div>
+    ${v[1] ? `<div class="quiz-pos">${v[1]}</div>` : '<div class="quiz-pos">&nbsp;</div>'}
+    <div class="quiz-options">${opts}</div>
+    ${state.quizAnswered ? `<div style="text-align:center;margin-top:8px;"><button class="btn" id="nextQ">다음 문제 →</button></div>` : ''}
+  `;
+
+  $('mainContent').querySelectorAll('.quiz-option').forEach(btn => {
+    btn.onclick = () => {
+      if (state.quizAnswered) return;
+      const i = parseInt(btn.dataset.i);
+      state.quizOptions[i]._picked = true;
+      state.quizAnswered = true;
+      if (state.quizOptions[i].correct) {
+        state.quizScore++;
+        markKnown(item.day, item.idx);
+      } else {
+        markUnknown(item.day, item.idx);
+      }
+      saveProgress();
+      renderNav();
+      renderQuiz();
+      renderProgress();
+    };
+  });
+  if ($('nextQ')) {
+    $('nextQ').onclick = () => {
+      state.quizIdx++;
+      state.quizAnswered = false;
+      if (state.quizIdx < qTotal) prepareQuizOptions();
+      renderQuiz();
+    };
+  }
+}
+
+function renderReviewList() {
+  const words = currentWords();
+  if (words.length === 0) {
+    const msg = state.reviewScope === 'day'
+      ? `Day ${state.day}에 '모름' 표시된 단어가 없습니다`
+      : `전체에 '모름' 표시된 단어가 없습니다`;
+    $('mainContent').innerHTML = `
+      <div class="empty-state">
+        <div class="icon">✓</div>
+        <p>${msg}</p>
+        <p class="hint">플래시카드나 단어장에서 '모름' 표시한 단어가 여기 모입니다</p>
+      </div>`;
+    return;
+  }
+
+  const modeButtons = `
+    <div class="options-row">
+      <button class="btn" id="startFcReview">플래시카드로 복습</button>
+      <button class="btn" id="startQuizReview">퀴즈로 복습</button>
+    </div>
+  `;
+
+  const list = words.map((v, i) => {
+    const isKnown = state.known[v.day].has(v.idx);
+    let cls = 'word-card unknown';
+    if (isKnown) cls += ' known';
+    return `<div class="${cls}" data-idx="${v.idx}" data-day="${v.day}">
+      <div class="word-num">${String(i+1).padStart(2,'0')}</div>
+      <div class="word-main">
+        <div class="word-header">
+          <span class="word-text">${v.w}</span>
+          ${v.p ? `<span class="word-pos">${v.p}</span>` : ''}
+          ${state.reviewScope === 'all' ? `<span class="word-day-tag">Day ${v.day}</span>` : ''}
+        </div>
+        <div class="word-meaning">${v.m}</div>
+      </div>
+      <div class="check-mark unk">✗</div>
+    </div>`;
+  }).join('');
+  $('mainContent').innerHTML = modeButtons + list;
+
+  $('startFcReview').onclick = () => {
+    // Stay in review mode but switch to flashcard view
+    state.mode = 'review';
+    state.fcIdx = 0;
+    state.flipped = false;
+    // Temporarily mark that we want flashcard display
+    window._reviewView = 'flashcard';
+    renderFlashcard();
+  };
+  $('startQuizReview').onclick = () => {
+    window._reviewView = 'quiz';
+    startQuiz();
+    renderQuiz();
+  };
+
+  // Tap on card removes from unknown list
+  $('mainContent').querySelectorAll('.word-card').forEach(card => {
+    card.onclick = () => {
+      const idx = parseInt(card.dataset.idx);
+      const day = parseInt(card.dataset.day);
+      state.unknown[day].delete(idx);
+      saveProgress();
+      renderNav();
+      renderReviewList();
+      renderProgress();
+    };
+  });
+}
+
+function renderContent() {
+  if (state.mode === 'browse') renderBrowse();
+  else if (state.mode === 'flashcard') renderFlashcard();
+  else if (state.mode === 'quiz') renderQuiz();
+  else if (state.mode === 'review') {
+    if (window._reviewView === 'flashcard') renderFlashcard();
+    else if (window._reviewView === 'quiz') renderQuiz();
+    else renderReviewList();
+  }
+}
+
+function renderProgress() {
+  let totalKnown = 0, totalAll = 0, totalUnk = 0;
+  for (let d = 1; d <= TOTAL_DAYS; d++) {
+    totalKnown += state.known[d].size;
+    totalUnk += state.unknown[d].size;
+    totalAll += VOCAB[d].length;
+  }
+  const dayKnown = state.known[state.day].size;
+  const dayTotal = VOCAB[state.day].length;
+  const dayUnk = state.unknown[state.day].size;
+  const overallPct = Math.round((totalKnown / totalAll) * 100);
+  $('progressInfo').innerHTML = `
+    <div>
+      <span class="progress-label">Day ${state.day}: </span>
+      <span class="progress-value">${dayKnown} / ${dayTotal}</span>
+      ${dayUnk > 0 ? `<span class="progress-unk"> · 모름 ${dayUnk}</span>` : ''}
+      <span style="margin:0 10px;color:var(--text-tertiary);">·</span>
+      <span class="progress-label">전체: </span>
+      <span class="progress-value">${totalKnown} / ${totalAll}</span>
+      <span style="color:var(--text-tertiary);"> (${overallPct}%)</span>
+      ${totalUnk > 0 ? `<span class="progress-unk"> · 모름 ${totalUnk}</span>` : ''}
+    </div>
+    <button class="reset-btn" id="resetBtn">진도 초기화</button>
+  `;
+  $('resetBtn').onclick = () => {
+    if (confirm('모든 진도(암기·모름 표시 포함)가 삭제됩니다. 정말 초기화할까요?')) {
+      for (let d = 1; d <= TOTAL_DAYS; d++) {
+        state.known[d].clear();
+        state.unknown[d].clear();
+      }
+      saveProgress();
+      renderNav();
+      renderContent();
+      renderProgress();
+    }
+  };
+}
+
+function setMode(m) {
+  state.mode = m;
+  window._reviewView = null;
+  if (m === 'flashcard') { state.fcIdx = 0; state.flipped = false; }
+  if (m === 'quiz') startQuiz();
+  if (m === 'review') { state.fcIdx = 0; state.flipped = false; }
+  saveProgress();
+  renderNav();
+  renderContent();
+  window.scrollTo(0, 0);
+}
+
+function setDay(d) {
+  state.day = d;
+  state.fcIdx = 0;
+  state.flipped = false;
+  state.order[d] = state.shuffle
+    ? shuffleArr(VOCAB[d].map((_, i) => i))
+    : VOCAB[d].map((_, i) => i);
+  if (state.mode === 'quiz') startQuiz();
+  saveProgress();
+  renderNav();
+  renderContent();
+  renderProgress();
+  window.scrollTo(0, 0);
+}
+
+function setReviewScope(scope) {
+  state.reviewScope = scope;
+  state.fcIdx = 0;
+  state.flipped = false;
+  window._reviewView = null;
+  if (state.mode === 'review') startQuiz();
+  saveProgress();
+  renderNav();
+  renderContent();
+  window.scrollTo(0, 0);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  const inFc = state.mode === 'flashcard' || (state.mode === 'review' && window._reviewView === 'flashcard');
+  const inQuiz = state.mode === 'quiz' || (state.mode === 'review' && window._reviewView === 'quiz');
+  if (inFc) {
+    if (e.key === 'ArrowLeft') { $('fcPrev')?.click(); }
+    else if (e.key === 'ArrowRight') { $('fcNext')?.click(); }
+    else if (e.key === ' ') { e.preventDefault(); $('fcCard')?.click(); }
+    else if (e.key === 'o' || e.key === 'O') { $('fcKnown')?.click(); }
+    else if (e.key === 'x' || e.key === 'X') { $('fcUnknown')?.click(); }
+  } else if (inQuiz) {
+    if (['1','2','3','4'].includes(e.key)) {
+      const btns = document.querySelectorAll('.quiz-option');
+      btns[parseInt(e.key) - 1]?.click();
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      $('nextQ')?.click();
+    }
+  }
+});
+
+// Swipe navigation
+let touchStartX = null, touchStartY = null;
+document.addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+document.addEventListener('touchend', e => {
+  if (touchStartX === null) return;
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  touchStartX = null;
+  if (Math.abs(dx) < 60 || Math.abs(dy) > 60) return;
+  const inFc = state.mode === 'flashcard' || (state.mode === 'review' && window._reviewView === 'flashcard');
+  if (inFc) {
+    if (dx < 0) $('fcNext')?.click();
+    else $('fcPrev')?.click();
+  }
+}, { passive: true });
+
+loadProgress();
+if (state.mode === 'quiz') startQuiz();
+renderNav();
+renderContent();
+renderProgress();
+</script>
+</body>
+</html>
