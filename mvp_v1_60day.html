@@ -348,6 +348,25 @@ function attachFlashGestures(card, doPrev, doNext, doFlip){
   });
   card.addEventListener('pointercancel', ()=>{active=false;});
 }
+// 긴 단어가 카드 너비를 넘으면 그 단어만 한 줄에 맞게 폰트를 자동 축소
+function fitWord(el){
+  if(!el)return;
+  el.style.whiteSpace='nowrap';
+  el.style.display='inline-block';
+  el.style.fontSize='';                 // CSS clamp 기본값으로 리셋
+  const p=el.parentElement; if(!p)return;
+  const cs=getComputedStyle(p);
+  const pad=(parseFloat(cs.paddingLeft)||0)+(parseFloat(cs.paddingRight)||0);
+  const avail=p.clientWidth-pad-6;
+  const natural=el.scrollWidth||el.offsetWidth;
+  if(avail>0 && natural>avail){
+    const maxPx=parseFloat(getComputedStyle(el).fontSize)||48;
+    let size=Math.floor(maxPx*avail/natural);
+    const minPx=22;
+    if(size<minPx){size=minPx;el.style.whiteSpace='normal';}  // 너무 길면 최소크기+줄바꿈
+    el.style.fontSize=size+'px';
+  }
+}
 function renderFlash(refs,src){
   if(state.shuffle && src==='day'){if(!state.order||state.order.length!==refs.length)state.order=shuffleArr(refs);refs=state.order;}
   if(refs.length===0){$content.innerHTML=`<div class="panel"><div class="empty">표시할 단어가 없습니다.</div></div>`;return;}
@@ -376,6 +395,7 @@ function renderFlash(refs,src){
     ()=>{if(state.flashIdx>0){state.flashIdx--;state.flashFlip=false;renderFlash(refs,src);}},
     ()=>{if(state.flashIdx<refs.length-1){state.flashIdx++;state.flashFlip=false;renderFlash(refs,src);}},
     ()=>{state.flashFlip=!state.flashFlip;renderFlash(refs,src);});
+  fitWord(card.querySelector('.fword'));
   $content.querySelectorAll('.spk').forEach(b=>b.onclick=e=>speak(b.dataset.speak,e));
   document.getElementById('prev').onclick=()=>{if(state.flashIdx>0){state.flashIdx--;state.flashFlip=false;renderFlash(refs,src);}};
   document.getElementById('next').onclick=()=>{if(state.flashIdx<refs.length-1){state.flashIdx++;state.flashFlip=false;renderFlash(refs,src);}};
@@ -499,6 +519,7 @@ function flashInto(host,refs){
     ()=>{if(state.flashIdx>0){state.flashIdx--;state.flashFlip=false;flashInto(host,refs);}},
     ()=>{if(state.flashIdx<refs.length-1){state.flashIdx++;state.flashFlip=false;flashInto(host,refs);}},
     ()=>{state.flashFlip=!state.flashFlip;flashInto(host,refs);});
+  fitWord(card.querySelector('.fword'));
   host.querySelectorAll('.spk').forEach(b=>b.onclick=e=>speak(b.dataset.speak,e));
   document.getElementById('prev').onclick=()=>{if(state.flashIdx>0){state.flashIdx--;state.flashFlip=false;flashInto(host,refs);}};
   document.getElementById('next').onclick=()=>{if(state.flashIdx<refs.length-1){state.flashIdx++;state.flashFlip=false;flashInto(host,refs);}};
@@ -562,6 +583,7 @@ function renderSummary(){
 }
 
 render();
+window.addEventListener('resize',()=>{const fw=document.querySelector('#flashCard .fword');if(fw)fitWord(fw);});
 </script>
 </body>
 </html>
