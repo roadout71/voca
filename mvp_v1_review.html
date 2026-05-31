@@ -104,6 +104,10 @@ footer{margin-top:18px;padding:14px;text-align:center;font-size:13px;color:var(-
   border-top:1px solid var(--line);}
 footer b{color:var(--ink);font-weight:700;}
 footer .red{color:var(--red);font-weight:700;}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(16px);background:#1f2430;color:#fff;
+  padding:11px 16px;border-radius:10px;font-size:13px;line-height:1.5;max-width:88%;text-align:center;opacity:0;
+  pointer-events:none;transition:opacity .25s,transform .25s;z-index:9999;box-shadow:0 6px 20px rgba(0,0,0,.28);}
+#toast.show{opacity:.97;transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
@@ -160,7 +164,29 @@ function groupLabel(g){const ds=groupDays(g);return ds[0]+'–'+ds[ds.length-1]+
 function escapeHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 /* TTS */
-function speak(text,ev){if(ev)ev.stopPropagation();try{const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=0.9;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
+let synthVoice=null, voicesLoaded=false, _voiceCheckReady=false, _noVoiceToasted=false;
+function loadVoices(){if(!('speechSynthesis'in window))return;const vs=speechSynthesis.getVoices()||[];if(vs.length){voicesLoaded=true;synthVoice=vs.find(v=>/en[-_]US/i.test(v.lang))||vs.find(v=>/^en/i.test(v.lang))||null;}}
+if('speechSynthesis'in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices;setTimeout(loadVoices,300);setTimeout(()=>{loadVoices();_voiceCheckReady=true;},1300);}
+let _warmed=false;
+function warmupTTS(){if(_warmed||!('speechSynthesis'in window))return;_warmed=true;try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}catch(e){}}
+document.addEventListener('pointerdown',warmupTTS,{once:true});
+let _toastT=null;
+function toast(msg){let el=document.getElementById('toast');if(!el){el=document.createElement('div');el.id='toast';document.body.appendChild(el);}el.textContent=msg;el.classList.add('show');clearTimeout(_toastT);_toastT=setTimeout(()=>el.classList.remove('show'),4000);}
+function speak(text,ev){
+  if(ev){ev.stopPropagation();}
+  if(!('speechSynthesis'in window)){toast('이 브라우저는 음성 듣기를 지원하지 않습니다.');return;}
+  try{
+    if(!voicesLoaded)loadVoices();
+    speechSynthesis.cancel();
+    try{speechSynthesis.resume();}catch(e){}
+    const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=.9;if(synthVoice)u.voice=synthVoice;
+    speechSynthesis.speak(u);
+    setTimeout(()=>{try{if(speechSynthesis.paused)speechSynthesis.resume();}catch(e){}},120);
+    if(_voiceCheckReady && !voicesLoaded && (speechSynthesis.getVoices()||[]).length===0 && !_noVoiceToasted){
+      _noVoiceToasted=true;toast('이 기기에 영어 음성(TTS)이 없는 것 같아요. 기기의 음성/TTS 설정에서 영어 음성을 설치하면 들을 수 있습니다.');
+    }
+  }catch(e){toast('발음 재생에 실패했습니다. 잠시 후 다시 시도해 주세요.');}
+}
 
 const $groups=document.getElementById('groups');
 const $tabs=document.getElementById('tabs');
@@ -198,7 +224,7 @@ function controlsHtml(){
 }
 function bindControls(){
   const ht=document.getElementById('hideToggle'); if(ht)ht.onclick=()=>{state.hideAll=!state.hideAll;render();};
-  const ut=document.getElementById('unkToggle'); if(ut)ut.onclick=()=>{state.onlyUnk=!state.onlyUnk;state.flashIdx=0;state.flashFlip=false;render();};
+  const ut=document.getElementById('unkToggle'); if(ut)ut.onclick=()=>{state.onlyUnk=!state.onlyUnk;state.hideAll=state.onlyUnk;state.flashIdx=0;state.flashFlip=false;render();};
   const rg=document.getElementById('resetGroup'); if(rg)rg.onclick=()=>{
     if(!confirm(groupLabel(state.group)+' 묶음의 암기·모름 체크를 모두 지울까요?'))return;
     for(const r of groupRefs(state.group)){MEM.delete(key(r.d,r.i));UNK.delete(key(r.d,r.i));}
@@ -252,10 +278,9 @@ function bindListEvents(){
       clearTimeout(timer);
       if(e.target.closest('.spk'))return;
       if(longFired||moved)return;
-      if(state.hideAll && !isMem(d,i) && !isUnk(d,i)){
-        // 숨김 상태에서 처음 탭 → 뜻만 공개(개별)
-        const ph=card.querySelector('.ph');
-        if(ph){const w=DATA[d-1][i];ph.outerHTML=`<div class="def">${w.def.map(l=>escapeHtml(l)).join('\n')}</div>`;return;}
+      const ph=card.querySelector('.ph');
+      if(ph){ // 뜻이 가려진 상태면 먼저 그 카드 뜻만 공개
+        const w=DATA[d-1][i];ph.outerHTML=`<div class="def">${w.def.map(l=>escapeHtml(l)).join('\n')}</div>`;return;
       }
       setMem(d,i);render();
     });
@@ -297,6 +322,12 @@ function fitWord(el){
     el.style.fontSize=size+'px';
   }
 }
+let _lastFlashKey=null;
+function flashFlipFor(r){
+  const k=r.d+':'+r.i;
+  if(k!==_lastFlashKey){state.flashFlip=false;_lastFlashKey=k;}
+  return state.flashFlip;
+}
 
 function renderFlash(){
   const refs=visibleRefs();
@@ -306,7 +337,7 @@ function renderFlash(){
   }
   if(state.flashIdx>=refs.length)state.flashIdx=refs.length-1;
   if(state.flashIdx<0)state.flashIdx=0;
-  const r=refs[state.flashIdx];const w=DATA[r.d-1][r.i];const flip=state.flashFlip;
+  const r=refs[state.flashIdx];const w=DATA[r.d-1][r.i];const flip=flashFlipFor(r);
   const memC=isMem(r.d,r.i), unkC=isUnk(r.d,r.i);
   const stateTxt=memC?'✓ 암기':(unkC?'✗ 모름':'');
   const spk=`<button class="fspk" data-speak="${escapeHtml(w.w)}">🔊</button>`;

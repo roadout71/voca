@@ -139,6 +139,10 @@ footer{margin-top:18px;}
 .progress-track{height:7px;background:#eceae4;border-radius:99px;overflow:hidden;flex:1;min-width:120px;max-width:260px;}
 .progress-fill{height:100%;background:var(--green);width:0;}
 .hide{display:none!important;}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(16px);background:#1f2430;color:#fff;
+  padding:11px 16px;border-radius:10px;font-size:13px;line-height:1.5;max-width:88%;text-align:center;opacity:0;
+  pointer-events:none;transition:opacity .25s,transform .25s;z-index:9999;box-shadow:0 6px 20px rgba(0,0,0,.28);}
+#toast.show{opacity:.97;transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
@@ -182,6 +186,8 @@ const state={
   day: st0.day || 1,
   shuffle:false,
   hideMeaning:false,
+  unkHideMeaning:true,        // 모름 목록은 기본적으로 뜻 가림
+  activeList:'day',           // 'day'(단어장) | 'unk'(모름 목록): 카드 숨김 플래그 선택
   revealed:new Set(),         // keys revealed individually in hide mode
   order:null,                 // shuffled order for list/flash/quiz
   flashIdx:0, flashFlip:false,
@@ -198,11 +204,30 @@ function dayStats(d){let m=0,u=0;DATA[d-1].forEach((_,i)=>{if(isMem(d,i))m++;if(
 function totalStats(){let m=0,u=0,t=0;for(let d=1;d<=NDAYS;d++){t+=DATA[d-1].length;DATA[d-1].forEach((_,i)=>{if(isMem(d,i))m++;if(isUnk(d,i))u++;});}return{m,u,t,pct:Math.round(m/t*100)};}
 function unknownRefs(scope){const out=[];const days=scope==='day'?[state.day]:Array.from({length:NDAYS},(_,k)=>k+1);
   for(const d of days){DATA[d-1].forEach((_,i)=>{if(isUnk(d,i))out.push({d,i});});}return out;}
-let synthVoice=null;
-function pickVoice(){const vs=speechSynthesis.getVoices();synthVoice=vs.find(v=>/en[-_]US/i.test(v.lang))||vs.find(v=>/^en/i.test(v.lang))||null;}
-if('speechSynthesis'in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}
-function speak(text,ev){if(ev){ev.stopPropagation();} if(!('speechSynthesis'in window))return;
-  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=.9;if(synthVoice)u.voice=synthVoice;speechSynthesis.speak(u);}
+let synthVoice=null, voicesLoaded=false, _voiceCheckReady=false, _noVoiceToasted=false;
+function loadVoices(){if(!('speechSynthesis'in window))return;const vs=speechSynthesis.getVoices()||[];if(vs.length){voicesLoaded=true;synthVoice=vs.find(v=>/en[-_]US/i.test(v.lang))||vs.find(v=>/^en/i.test(v.lang))||null;}}
+if('speechSynthesis'in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices;setTimeout(loadVoices,300);setTimeout(()=>{loadVoices();_voiceCheckReady=true;},1300);}
+// 첫 사용자 입력에서 음성 엔진 예열(태블릿/사파리 첫 재생 무음 방지)
+let _warmed=false;
+function warmupTTS(){if(_warmed||!('speechSynthesis'in window))return;_warmed=true;try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}catch(e){}}
+document.addEventListener('pointerdown',warmupTTS,{once:true});
+let _toastT=null;
+function toast(msg){let el=document.getElementById('toast');if(!el){el=document.createElement('div');el.id='toast';document.body.appendChild(el);}el.textContent=msg;el.classList.add('show');clearTimeout(_toastT);_toastT=setTimeout(()=>el.classList.remove('show'),4000);}
+function speak(text,ev){
+  if(ev){ev.stopPropagation();}
+  if(!('speechSynthesis'in window)){toast('이 브라우저는 음성 듣기를 지원하지 않습니다.');return;}
+  try{
+    if(!voicesLoaded)loadVoices();
+    speechSynthesis.cancel();
+    try{speechSynthesis.resume();}catch(e){}   // 크롬 데스크톱 '멈춤(paused)' 상태 해제
+    const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=.9;if(synthVoice)u.voice=synthVoice;
+    speechSynthesis.speak(u);
+    setTimeout(()=>{try{if(speechSynthesis.paused)speechSynthesis.resume();}catch(e){}},120);  // pending 멈춤 재가동
+    if(_voiceCheckReady && !voicesLoaded && (speechSynthesis.getVoices()||[]).length===0 && !_noVoiceToasted){
+      _noVoiceToasted=true;toast('이 기기에 영어 음성(TTS)이 없는 것 같아요. 기기의 음성/TTS 설정에서 영어 음성을 설치하면 들을 수 있습니다.');
+    }
+  }catch(e){toast('발음 재생에 실패했습니다. 잠시 후 다시 시도해 주세요.');}
+}
 function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 /* ---------- render root ---------- */
@@ -255,6 +280,7 @@ function getListOrder(){
   return state.order;
 }
 function renderList(){
+  state.activeList='day';
   const refs=getListOrder();
   const hideBtn=`<button class="toggle-btn ${state.hideMeaning?'on':''}" id="hideToggle">${state.hideMeaning?'👁 뜻 전체 보기':'🙈 뜻 전체 숨기기'}</button>`;
   const bar=`<div class="panel bar">
@@ -279,8 +305,9 @@ function wordCardHTML(d,i,no){
   const defLines=w.def.map(l=>`<span class="ln">${escapeHtml(l)}</span>`).join('');
   const k=key(d,i);
   const revealed=state.revealed.has(k);
+  const hideM = (state.activeList==='unk') ? state.unkHideMeaning : state.hideMeaning;
   let meaningBlock;
-  if(state.hideMeaning && !revealed){
+  if(hideM && !revealed){
     meaningBlock=`<div class="reveal-ph" data-reveal="${k}">👁 뜻 보기</div>`;
   }else{
     meaningBlock=`<div class="meaning">${defLines}</div>`;
@@ -367,12 +394,19 @@ function fitWord(el){
     el.style.fontSize=size+'px';
   }
 }
+// 표시 단어가 바뀌면 항상 앞면(단어)부터 보이도록 보장. 같은 단어에서 탭으로 뒤집을 때만 뒷면 유지.
+let _lastFlashKey=null;
+function flashFlipFor(ctx,r){
+  const k=ctx+'|'+r.d+':'+r.i;
+  if(k!==_lastFlashKey){state.flashFlip=false;_lastFlashKey=k;}
+  return state.flashFlip;
+}
 function renderFlash(refs,src){
   if(state.shuffle && src==='day'){if(!state.order||state.order.length!==refs.length)state.order=shuffleArr(refs);refs=state.order;}
   if(refs.length===0){$content.innerHTML=`<div class="panel"><div class="empty">표시할 단어가 없습니다.</div></div>`;return;}
   if(state.flashIdx>=refs.length)state.flashIdx=refs.length-1;
   const r=refs[state.flashIdx];const w=DATA[r.d-1][r.i];
-  const flip=state.flashFlip;
+  const flip=flashFlipFor('f'+(src||''),r);
   const spk=`<button class="spk fspk" data-speak="${escapeHtml(w.w)}">🔊</button>`;
   const front=`<div class="fday">Day ${r.d}</div><div class="fword">${escapeHtml(w.w)}</div>${w.ipa?`<div class="fipa">${escapeHtml(w.ipa)}</div>`:''}${w.pos?`<div class="fpos">${w.pos}</div>`:''}<div class="flip-hint">탭: 뜻 보기 · 좌우로 넘기기: 다음·이전</div>`;
   const back=`<div class="fday">Day ${r.d}</div><div class="fword fword-back">${escapeHtml(w.w)}</div>${w.ipa?`<div class="fipa">${escapeHtml(w.ipa)}</div>`:''}<div class="fdef">${w.def.map(l=>escapeHtml(l)).join('\n')}</div>`;
@@ -461,6 +495,7 @@ function renderQuiz(refs,src){
 /* ---------- UNKNOWN (모름) ---------- */
 function renderUnknown(){
   if(state.unkSub!=='list'&&state.unkSub!=='flash')state.unkSub='list';
+  state.activeList='unk';
   const refs=unknownRefs(state.unkScope);
   const controls=`<div class="panel"><div class="unk-controls">
       <div class="seg">
@@ -477,15 +512,18 @@ function renderUnknown(){
   if(state.unkSub==='list'){
     if(refs.length===0){body=`<div class="panel"><div class="empty">‘모름’으로 표시한 단어가 없습니다.<br>단어장이나 플래시카드에서 ‘모름’으로 표시하면 여기에 모입니다.</div></div>`;}
     else{
+      const hideBtn=`<div class="panel bar"><button class="toggle-btn ${state.unkHideMeaning?'on':''}" id="unkHideToggle">${state.unkHideMeaning?'👁 뜻 전체 보기':'🙈 뜻 전체 숨기기'}</button><span class="spacer"></span><span class="hint">탭: 암기 · 길게: 모름 해제 · 뜻 영역 탭: 가린 뜻 보기</span></div>`;
       let cards='';refs.forEach((r,p)=>{cards+=wordCardHTML(r.d,r.i,p+1);});
-      body=`<div class="list">${cards}</div>`;
+      body=hideBtn+`<div class="list">${cards}</div>`;
     }
   }
   $content.innerHTML=controls+`<div id="unkbody">${body}</div>`;
-  $content.querySelectorAll('[data-scope]').forEach(b=>b.onclick=()=>{state.unkScope=b.dataset.scope;state.quizRefs=null;state.flashIdx=0;state.flashFlip=false;renderUnknown();});
-  $content.querySelectorAll('[data-sub]').forEach(b=>b.onclick=()=>{state.unkSub=b.dataset.sub;state.quizRefs=null;state.flashIdx=0;state.flashFlip=false;state.order=null;
+  $content.querySelectorAll('[data-scope]').forEach(b=>b.onclick=()=>{state.unkScope=b.dataset.scope;state.quizRefs=null;state.flashIdx=0;state.flashFlip=false;state.revealed.clear();renderUnknown();});
+  $content.querySelectorAll('[data-sub]').forEach(b=>b.onclick=()=>{state.unkSub=b.dataset.sub;state.quizRefs=null;state.flashIdx=0;state.flashFlip=false;state.order=null;state.revealed.clear();
     renderUnknown();
   });
+  const uht=document.getElementById('unkHideToggle');
+  if(uht)uht.onclick=()=>{state.unkHideMeaning=!state.unkHideMeaning;state.revealed.clear();renderUnknown();};
   if(state.unkSub==='list')bindCardEvents();
   else if(state.unkSub==='flash')renderUnkFlash(refs);
 }
@@ -500,7 +538,7 @@ function renderUnkFlash(refs){
 function flashInto(host,refs){
   if(refs.length===0){host.innerHTML=`<div class="panel"><div class="empty">‘모름’ 단어가 없습니다.</div></div>`;return;}
   if(state.flashIdx>=refs.length)state.flashIdx=refs.length-1;
-  const r=refs[state.flashIdx];const w=DATA[r.d-1][r.i];const flip=state.flashFlip;
+  const r=refs[state.flashIdx];const w=DATA[r.d-1][r.i];const flip=flashFlipFor('u',r);
   const spk=`<button class="spk fspk" data-speak="${escapeHtml(w.w)}">🔊</button>`;
   const front=`<div class="fday">Day ${r.d}</div><div class="fword">${escapeHtml(w.w)}</div>${w.ipa?`<div class="fipa">${escapeHtml(w.ipa)}</div>`:''}${w.pos?`<div class="fpos">${w.pos}</div>`:''}<div class="flip-hint">탭: 뜻 보기 · 좌우로 넘기기: 다음·이전</div>`;
   const back=`<div class="fday">Day ${r.d}</div><div class="fword fword-back">${escapeHtml(w.w)}</div>${w.ipa?`<div class="fipa">${escapeHtml(w.ipa)}</div>`:''}<div class="fdef">${w.def.map(l=>escapeHtml(l)).join('\n')}</div>`;
