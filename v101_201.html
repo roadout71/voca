@@ -185,7 +185,7 @@ const state={
   view: (st0.view && st0.view!=='quiz') ? st0.view : 'list',
   day: st0.day || 1,
   shuffle:false,
-  hideMeaning:false,
+  hideMeaning:true,
   unkHideMeaning:true,        // 모름 목록은 기본적으로 뜻 가림
   activeList:'day',           // 'day'(단어장) | 'unk'(모름 목록): 카드 숨김 플래그 선택
   revealed:new Set(),         // keys revealed individually in hide mode
@@ -229,6 +229,7 @@ function speak(text,ev){
   }catch(e){toast('발음 재생에 실패했습니다. 잠시 후 다시 시도해 주세요.');}
 }
 function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function flashDef(defArr){var lines=defArr.map(function(l){return escapeHtml(l);});var idx=defArr.findIndex(function(l){return /^\(mvp/.test(l);});if(idx>0){lines.splice(idx,0,'');}return lines.join('\n');}
 
 /* ---------- render root ---------- */
 const $tabs=document.getElementById('tabs'),$grid=document.getElementById('grid'),
@@ -409,7 +410,7 @@ function renderFlash(refs,src){
   const flip=flashFlipFor('f'+(src||''),r);
   const spk=`<button class="spk fspk" data-speak="${escapeHtml(w.w)}">🔊</button>`;
   const front=`<div class="fday">Chapter ${r.d}</div><div class="fword">${escapeHtml(w.w)}</div>${w.ipa?`<div class="fipa">${escapeHtml(w.ipa)}</div>`:''}${w.pos?`<div class="fpos">${w.pos}</div>`:''}<div class="flip-hint">탭: 뜻 보기 · 좌우로 넘기기: 다음·이전</div>`;
-  const back=`<div class="fday">Chapter ${r.d}</div><div class="fword fword-back">${escapeHtml(w.w)}</div>${w.ipa?`<div class="fipa">${escapeHtml(w.ipa)}</div>`:''}<div class="fdef">${w.def.map(l=>escapeHtml(l)).join('\n')}</div>`;
+  const back=`<div class="fday">Chapter ${r.d}</div><div class="fword fword-back">${escapeHtml(w.w)}</div>${w.ipa?`<div class="fipa">${escapeHtml(w.ipa)}</div>`:''}<div class="fdef">${flashDef(w.def)}</div>`;
   const backLink = src==='unk' ? `<button class="btn" id="backToUnk">← 모름으로</button>` : '';
   $content.innerHTML=`<div class="flash-wrap">
     <div class="flash ${isUnk(r.d,r.i)?'unk':''}" id="flashCard">${spk}${flip?back:front}</div>
@@ -541,7 +542,7 @@ function flashInto(host,refs){
   const r=refs[state.flashIdx];const w=DATA[r.d-1][r.i];const flip=flashFlipFor('u',r);
   const spk=`<button class="spk fspk" data-speak="${escapeHtml(w.w)}">🔊</button>`;
   const front=`<div class="fday">Chapter ${r.d}</div><div class="fword">${escapeHtml(w.w)}</div>${w.ipa?`<div class="fipa">${escapeHtml(w.ipa)}</div>`:''}${w.pos?`<div class="fpos">${w.pos}</div>`:''}<div class="flip-hint">탭: 뜻 보기 · 좌우로 넘기기: 다음·이전</div>`;
-  const back=`<div class="fday">Chapter ${r.d}</div><div class="fword fword-back">${escapeHtml(w.w)}</div>${w.ipa?`<div class="fipa">${escapeHtml(w.ipa)}</div>`:''}<div class="fdef">${w.def.map(l=>escapeHtml(l)).join('\n')}</div>`;
+  const back=`<div class="fday">Chapter ${r.d}</div><div class="fword fword-back">${escapeHtml(w.w)}</div>${w.ipa?`<div class="fipa">${escapeHtml(w.ipa)}</div>`:''}<div class="fdef">${flashDef(w.def)}</div>`;
   host.innerHTML=`<div class="flash-wrap">
     <div class="flash ${isUnk(r.d,r.i)?'unk':''}" id="flashCard">${spk}${flip?back:front}</div>
     <div class="flash-nav">
