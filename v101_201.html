@@ -195,6 +195,9 @@ const state={
   src:'day',                  // 'day' | 'unk' : context for flash/quiz
   unkScope:'day',             // 'day' | 'all'
   unkSub:'list',              // list | flash | quiz
+  unkShuffle:false,           // 모름 화면 순서 섞기
+  unkOrder:null,              // 모름 셔플 순서(키 'd-i' 배열)
+  unkPrevOrder:null,          // 직전 셔플(재섞기 시 동일 순서 방지)
 };
 
 /* ---------- helpers ---------- */
@@ -497,13 +500,29 @@ function renderQuiz(refs,src){
 function renderUnknown(){
   if(state.unkSub!=='list'&&state.unkSub!=='flash')state.unkSub='list';
   state.activeList='unk';
-  const refs=unknownRefs(state.unkScope);
+  let refs=unknownRefs(state.unkScope);
+  if(state.unkShuffle){
+    const key=r=>r.d+'-'+r.i;
+    const cur=new Set(refs.map(key));
+    if(!state.unkOrder){
+      let cand=shuffleArr(refs).map(key),tries=0;
+      while(refs.length>1&&state.unkPrevOrder&&cand.join()===state.unkPrevOrder.join()&&tries++<20)cand=shuffleArr(refs).map(key);
+      state.unkOrder=cand;state.unkPrevOrder=cand;
+    }
+    let ordered=state.unkOrder.filter(k=>cur.has(k));
+    const have=new Set(ordered);
+    refs.forEach(r=>{if(!have.has(key(r)))ordered.push(key(r));});
+    state.unkOrder=ordered;
+    const map=new Map(refs.map(r=>[key(r),r]));
+    refs=ordered.map(k=>map.get(k));
+  }
   const controls=`<div class="panel"><div class="unk-controls">
       <div class="seg">
         <button class="${state.unkScope==='day'?'on':''}" data-scope="day">이 챕터 (${dayStats(state.day).u})</button>
         <button class="${state.unkScope==='all'?'on':''}" data-scope="all">전체 20챕터 (${totalStats().u})</button>
       </div>
       <span class="spacer" style="flex:1"></span>
+      <label class="chk"><input type="checkbox" id="unkShuf" ${state.unkShuffle?'checked':''}> 순서 섞기</label>
       <div class="seg">
         <button class="${state.unkSub==='list'?'on':''}" data-sub="list">목록</button>
         <button class="${state.unkSub==='flash'?'on':''}" data-sub="flash">플래시카드</button>
@@ -519,7 +538,9 @@ function renderUnknown(){
     }
   }
   $content.innerHTML=controls+`<div id="unkbody">${body}</div>`;
-  $content.querySelectorAll('[data-scope]').forEach(b=>b.onclick=()=>{state.unkScope=b.dataset.scope;state.quizRefs=null;state.flashIdx=0;state.flashFlip=false;state.revealed.clear();renderUnknown();});
+  $content.querySelectorAll('[data-scope]').forEach(b=>b.onclick=()=>{state.unkScope=b.dataset.scope;state.unkOrder=null;state.quizRefs=null;state.flashIdx=0;state.flashFlip=false;state.revealed.clear();renderUnknown();});
+  const ush=document.getElementById('unkShuf');
+  if(ush)ush.onchange=e=>{state.unkShuffle=e.target.checked;state.unkOrder=null;state.flashIdx=0;state.flashFlip=false;renderUnknown();};
   $content.querySelectorAll('[data-sub]').forEach(b=>b.onclick=()=>{state.unkSub=b.dataset.sub;state.quizRefs=null;state.flashIdx=0;state.flashFlip=false;state.order=null;state.revealed.clear();
     renderUnknown();
   });
