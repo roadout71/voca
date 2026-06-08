@@ -326,6 +326,8 @@ function wordCardHTML(d,i,no){
     ${meaningBlock}
   </div>`;
 }
+// 길게 누르기 발동 직후, 카드 재렌더로 새 카드에 떨어지는 pointerup(탭)을 잠시 무시하기 위한 플래그
+let _suppressTapUntil=0;
 function bindCardEvents(){
   $content.querySelectorAll('.spk').forEach(b=>b.onclick=e=>speak(b.dataset.speak,e));
   $content.querySelectorAll('.reveal-ph').forEach(el=>el.onclick=e=>{
@@ -345,7 +347,7 @@ function bindCardEvents(){
       // 포인터를 카드에 고정해 살짝 벗어나도 길게 누르기가 유지되도록 함
       try{card.setPointerCapture(e.pointerId);}catch(_){}
       clearT();
-      timer=setTimeout(()=>{timer=null;longFired=true;
+      timer=setTimeout(()=>{timer=null;longFired=true;_suppressTapUntil=Date.now()+700;
         setUnk(d,i,!isUnk(d,i)); if(isUnk(d,i))setMem(d,i,false);
         refreshCard(card,d,i);renderTabs();renderGrid();renderSummary();
         if(navigator.vibrate){try{navigator.vibrate(15);}catch(_){}}   // 인식 햅틱 피드백
@@ -355,6 +357,7 @@ function bindCardEvents(){
       try{if(pid!=null)card.releasePointerCapture(pid);}catch(_){}
       if(longFired){e.preventDefault&&e.preventDefault();return;}
       if(moved)return;
+      if(Date.now()<_suppressTapUntil)return;   // 길게 누르기 직후 새 카드로 떨어진 탭 무시
       // if tapped a reveal placeholder or speaker, ignore (handled separately)
       if(e.target.closest('.reveal-ph')||e.target.closest('.spk'))return;
       // tap toggles memorized
