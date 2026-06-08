@@ -339,6 +339,8 @@ function bindCardEvents(){
     bindCardEvents();
   });
   $content.querySelectorAll('.wcard').forEach(card=>{
+    if(card.dataset._bound)return;   // 이미 바인딩된 카드는 건너뛰어 리스너 누적(프리징 원인) 방지
+    card.dataset._bound='1';
     const d=+card.dataset.d,i=+card.dataset.i;
     let timer=null,longFired=false,moved=false,sx=0,sy=0,pid=null;
     const MOVE_TOL=16;            // 손가락 미세 흔들림 허용치(px)
@@ -362,7 +364,7 @@ function bindCardEvents(){
       if(e.target.closest('.reveal-ph')||e.target.closest('.spk'))return;
       // tap toggles memorized
       setMem(d,i,!isMem(d,i)); if(isMem(d,i))setUnk(d,i,false); refreshCard(card,d,i);renderTabs();renderGrid();renderSummary();};
-    card.addEventListener('pointerdown',e=>{if(e.target.closest('.spk'))return;start(e);});
+    card.addEventListener('pointerdown',e=>{if(e.target.closest('.spk')||e.target.closest('.reveal-ph'))return;start(e);});
     card.addEventListener('pointermove',move);
     card.addEventListener('pointerup',end);
     // 실제 스크롤/시스템 취소만 타이머를 끊고, pointerleave 는 더 이상 끊지 않음(포인터 캡처로 대체)
